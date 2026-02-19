@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import LoginForm from './LoginForm';
 import SignupForm from './SignupForm';
-import { Alert, Button, Snackbar } from '@mui/material';
+import { Alert, Snackbar } from '@mui/material';
 import { useAppSelector } from '../../../Redux Toolkit/Store';
+import StorefrontIcon from '@mui/icons-material/Storefront';
+import { useNavigate } from 'react-router-dom';
+import './Auth.css';
 
 const Auth = () => {
   const [isLoginPage, setIsLoginPage] = useState(true);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const { auth } = useAppSelector((store) => store);
+  const navigate = useNavigate();
 
   const handleCloseSnackbar = () => setSnackbarOpen(false);
 
@@ -18,47 +22,34 @@ const Auth = () => {
   }, [auth.otpSent, auth.error]);
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-indigo-50 px-4">
-      <div className="w-full max-w-md bg-white p-8 flex flex-col gap-6">
-
-        {/* Header */}
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-indigo-700 mb-2">
-            {isLoginPage ? 'Sign In' : 'Sign Up'}
-          </h1>
-          <p className="text-indigo-500 text-sm">
+    <div className="auth-horizontal-container">
+   
+      {/* Right Side - Form */}
+      <div className="auth-form-section-horizontal">
+        <div className="auth-form-header">
+          <h2>{isLoginPage ? 'Sign In' : 'Sign Up'}</h2>
+          <p>
             {isLoginPage
-              ? 'Welcome back! Please login to your account.'
-              : 'Create your account to get started.'}
+              ? 'Enter your credentials to access your account'
+              : 'Fill in your details to create an account'}
           </p>
         </div>
 
-        {/* Forms */}
-        <div>{isLoginPage ? <LoginForm /> : <SignupForm />}</div>
+        {isLoginPage ? <LoginForm /> : <SignupForm />}
 
-        {/* Toggle Section */}
-        <div className="flex justify-center items-center gap-2 text-sm text-indigo-600 mt-4">
-          <span>{isLoginPage ? "Don't have an account?" : 'Already have an account?'}</span>
-          <Button
+        <div className="auth-toggle-horizontal">
+          <span>
+            {isLoginPage ? "Don't have an account?" : 'Already have an account?'}
+          </span>
+          <button
             onClick={() => setIsLoginPage(!isLoginPage)}
-            size="small"
-            variant="contained"
-            sx={{
-              textTransform: 'none',
-              backgroundColor: '#4F46E5',
-              '&:hover': { backgroundColor: '#4338CA' },
-              fontWeight: 600,
-              borderRadius: 0,
-              py: 0.5,
-              px: 2,
-            }}
+            className="auth-toggle-button-horizontal"
           >
-            {isLoginPage ? 'Sign Up' : 'Login'}
-          </Button>
+            {isLoginPage ? 'Sign Up' : 'Sign In'}
+          </button>
         </div>
       </div>
 
-      {/* Snackbar Notifications */}
       <Snackbar
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
         open={snackbarOpen}
@@ -69,7 +60,16 @@ const Auth = () => {
           onClose={handleCloseSnackbar}
           severity={auth.error ? 'error' : 'success'}
           variant="filled"
-          sx={{ width: '100%' }}
+          sx={{
+            borderRadius: 0,
+            border: '2px solid #000000',
+            backgroundColor: auth.error ? '#dc2626' : '#000000',
+            color: '#ffffff',
+            fontWeight: 500,
+            '& .MuiAlert-icon': {
+              color: '#ffffff',
+            },
+          }}
         >
           {auth.error ? auth.error : 'OTP sent to your email!'}
         </Alert>

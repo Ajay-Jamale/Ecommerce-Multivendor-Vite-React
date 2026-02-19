@@ -1,175 +1,235 @@
-import { Button, CircularProgress, TextField } from '@mui/material';
 import React, { useEffect, useState } from 'react';
-import OTPInput from '../../components/OtpFild/OTPInput';
+import { useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
+import * as Yup from 'yup';
 import { useAppDispatch, useAppSelector } from '../../../Redux Toolkit/Store';
 import { sendLoginSignupOtp, signup } from '../../../Redux Toolkit/Customer/AuthSlice';
-import { useNavigate } from 'react-router-dom';
+import OTPInput from '../../components/OtpFild/OTPInput';
+import './Auth.css';
+
+const validationSchema = Yup.object({
+  fullName: Yup.string()
+    .required('Full name is required')
+    .min(2, 'Name must be at least 2 characters'),
+  email: Yup.string()
+    .email('Invalid email address')
+    .required('Email is required'),
+  phoneNumber: Yup.string()
+    .required('Phone number is required')
+    .matches(/^[0-9]{10}$/, 'Phone number must be 10 digits'),
+});
 
 const SignupForm = () => {
   const navigate = useNavigate();
-  const [otp, setOtp] = useState('');
-  const [timer, setTimer] = useState<number>(30);
-  const [isTimerActive, setIsTimerActive] = useState<boolean>(false);
-
   const dispatch = useAppDispatch();
   const { auth } = useAppSelector((store) => store);
+  
+  const [otp, setOtp] = useState('');
+  const [timer, setTimer] = useState(30);
+  const [isTimerActive, setIsTimerActive] = useState(false);
 
   const formik = useFormik({
     initialValues: {
-      name: '',
+      fullName: '',
       email: '',
-      phoneNumber: '', // ✅ ADDED
-      otp: '',
+      phoneNumber: '',
     },
-    onSubmit: (values: any) => {
+    validationSchema,
+    onSubmit: () => {},
+  });
+
+  const handleOtpChange = (value: string) => setOtp(value);
+
+  const handleSendOtp = async () => {
+    if (formik.isValid && formik.values.email) {
+      await dispatch(sendLoginSignupOtp({ email: formik.values.email }));
+      setIsTimerActive(true);
+      setTimer(30);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    await dispatch(sendLoginSignupOtp({ email: formik.values.email }));
+    setIsTimerActive(true);
+    setTimer(30);
+  };
+
+  const handleSignUp = () => {
+    if (otp.length === 6) {
       dispatch(
         signup({
-          fullName: values.name,
-          email: values.email,
-          phoneNumber: values.phoneNumber, // ✅ SEND TO BACKEND
+          fullName: formik.values.fullName,
+          email: formik.values.email,
+          phoneNumber: formik.values.phoneNumber,
           otp,
           navigate,
         })
       );
-    },
-  });
-
-  const handleOtpChange = (otp: string) => setOtp(otp);
-
-  const handleResendOTP = () => {
-    dispatch(sendLoginSignupOtp({ email: formik.values.email }));
-    setTimer(30);
-    setIsTimerActive(true);
+    }
   };
-
-  const handleSentOtp = () => handleResendOTP();
-  const handleSignup = () => formik.handleSubmit();
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (isTimerActive) {
+    if (isTimerActive && timer > 0) {
       interval = setInterval(() => {
-        setTimer((prev) => {
-          if (prev === 1) {
-            clearInterval(interval);
-            setIsTimerActive(false);
-            return 30;
-          }
-          return prev - 1;
-        });
+        setTimer((prev) => prev - 1);
       }, 1000);
+    } else if (timer === 0) {
+      setIsTimerActive(false);
     }
     return () => clearInterval(interval);
-  }, [isTimerActive]);
+  }, [isTimerActive, timer]);
 
   return (
-    <div className="flex flex-col gap-5 w-full">
+    <div className="auth-form-horizontal">
+      <div className="auth-form-group-horizontal">
+        <label className="auth-label-horizontal">Full Name</label>
+        <div className="auth-input-wrapper-horizontal">
+          <input
+            type="text"
+            name="fullName"
+            value={formik.values.fullName}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            placeholder="Enter your full name"
+            className={`auth-input-horizontal ${
+              formik.touched.fullName && formik.errors.fullName ? 'error' : ''
+            }`}
+            disabled={auth.otpSent}
+          />
+          {formik.values.fullName && !formik.errors.fullName && (
+            <span className="auth-input-valid-horizontal">✓</span>
+          )}
+        </div>
+        {formik.touched.fullName && formik.errors.fullName && (
+          <p className="auth-error-horizontal">{formik.errors.fullName}</p>
+        )}
+      </div>
 
-      {/* Full Name */}
-      <TextField
-        fullWidth
-        name="name"
-        label="Full Name"
-        value={formik.values.name}
-        onChange={formik.handleChange}
-        variant="outlined"
-        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-      />
+      <div className="auth-form-group-horizontal">
+        <label className="auth-label-horizontal">Email Address</label>
+        <div className="auth-input-wrapper-horizontal">
+          <input
+            type="email"
+            name="email"
+            value={formik.values.email}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            placeholder="Enter your email address"
+            className={`auth-input-horizontal ${
+              formik.touched.email && formik.errors.email ? 'error' : ''
+            }`}
+            disabled={auth.otpSent}
+          />
+          {formik.values.email && !formik.errors.email && (
+            <span className="auth-input-valid-horizontal">✓</span>
+          )}
+        </div>
+        {formik.touched.email && formik.errors.email && (
+          <p className="auth-error-horizontal">{formik.errors.email}</p>
+        )}
+      </div>
 
-      {/* Email */}
-      <TextField
-        fullWidth
-        name="email"
-        label="Email"
-        value={formik.values.email}
-        onChange={formik.handleChange}
-        variant="outlined"
-        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-      />
+      <div className="auth-form-group-horizontal">
+        <label className="auth-label-horizontal">Phone Number</label>
+        <div className="auth-input-wrapper-horizontal">
+          <input
+            type="tel"
+            name="phoneNumber"
+            value={formik.values.phoneNumber}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            placeholder="Enter 10-digit mobile number"
+            maxLength={10}
+            className={`auth-input-horizontal ${
+              formik.touched.phoneNumber && formik.errors.phoneNumber ? 'error' : ''
+            }`}
+            disabled={auth.otpSent}
+          />
+          {formik.values.phoneNumber && !formik.errors.phoneNumber && (
+            <span className="auth-input-valid-horizontal">✓</span>
+          )}
+        </div>
+        {formik.touched.phoneNumber && formik.errors.phoneNumber && (
+          <p className="auth-error-horizontal">{formik.errors.phoneNumber}</p>
+        )}
+      </div>
 
-      {/* Phone Number ✅ */}
-      <TextField
-        fullWidth
-        name="phoneNumber"
-        label="Phone Number"
-        value={formik.values.phoneNumber}
-        onChange={formik.handleChange}
-        variant="outlined"
-        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-      />
-
-      {/* OTP Section */}
       {auth.otpSent && (
-        <div className="flex flex-col gap-3">
-          <p className="text-sm font-medium text-gray-600">
-            * Enter OTP sent to your email
-          </p>
+        <div className="auth-otp-section-horizontal">
+          <div className="auth-otp-box-horizontal">
+            <p className="auth-otp-title-horizontal">Verification Code</p>
+            <p className="auth-otp-subtitle-horizontal">
+              Enter the 6-digit code sent to <strong>{formik.values.email}</strong>
+            </p>
 
-          <OTPInput length={6} onChange={handleOtpChange} error={false} />
+            <div className="auth-otp-container-horizontal">
+              <OTPInput length={6} onChange={handleOtpChange} error={false} />
+            </div>
 
-          <p className="text-xs text-gray-500">
-            {isTimerActive ? (
-              <>Resend OTP in {timer} seconds</>
-            ) : (
-              <>
-                Didn’t receive OTP?{' '}
-                <span
-                  onClick={handleResendOTP}
-                  className="text-indigo-600 cursor-pointer hover:text-indigo-800 font-semibold"
-                >
-                  Resend OTP
-                </span>
-              </>
-            )}
-          </p>
+            <div className="auth-timer-container-horizontal">
+              {isTimerActive ? (
+                <p className="auth-timer-text-horizontal">
+                  <span>⏱️</span>
+                  Resend code in <span className="auth-timer-bold-horizontal">{timer}s</span>
+                </p>
+              ) : (
+                <p className="auth-timer-text-horizontal">
+                  <span>📧</span>
+                  Didn't receive the code?{' '}
+                  <button onClick={handleResendOtp} className="auth-resend-button-horizontal">
+                    Resend
+                  </button>
+                </p>
+              )}
+            </div>
+          </div>
 
-          <Button
-            fullWidth
-            variant="contained"
-            onClick={handleSignup}
-            disabled={auth.loading}
-            sx={{
-              py: '11px',
-              borderRadius: 0,
-              backgroundColor: '#4F46E5',
-              '&:hover': { backgroundColor: '#4338CA' },
-            }}
+          <button
+            onClick={handleSignUp}
+            disabled={auth.loading || otp.length !== 6}
+            className="auth-button-horizontal auth-button-primary-horizontal"
           >
             {auth.loading ? (
-              <CircularProgress size={24} color="inherit" />
+              <span className="auth-loading-container-horizontal">
+                <span className="auth-loading-horizontal"></span>
+                Creating account...
+              </span>
             ) : (
-              'Sign Up'
+              'Create Account'
             )}
-          </Button>
+          </button>
         </div>
       )}
 
-      {/* Send OTP */}
       {!auth.otpSent && (
-        <Button
-          fullWidth
-          variant="contained"
-          onClick={handleSentOtp}
-          disabled={
-            auth.loading ||
-            !formik.values.email ||
-            !formik.values.name ||
-            !formik.values.phoneNumber // ✅ REQUIRED
-          }
-          sx={{
-            py: '11px',
-            borderRadius: 0,
-            backgroundColor: '#4F46E5',
-            '&:hover': { backgroundColor: '#4338CA' },
-          }}
-        >
-          {auth.loading ? (
-            <CircularProgress size={24} color="inherit" />
-          ) : (
-            'Send OTP'
-          )}
-        </Button>
+        <>
+          <button
+            onClick={handleSendOtp}
+            disabled={
+              auth.loading ||
+              !formik.isValid ||
+              !formik.values.fullName ||
+              !formik.values.email ||
+              !formik.values.phoneNumber
+            }
+            className="auth-button-horizontal auth-button-primary-horizontal"
+          >
+            {auth.loading ? (
+              <span className="auth-loading-container-horizontal">
+                <span className="auth-loading-horizontal"></span>
+                Sending code...
+              </span>
+            ) : (
+              'Continue with Email'
+            )}
+          </button>
+          <p className="auth-footer-horizontal">
+            By signing up, you agree to our{' '}
+            <a href="/terms">Terms</a> and{' '}
+            <a href="/privacy">Privacy Policy</a>
+          </p>
+        </>
       )}
     </div>
   );
