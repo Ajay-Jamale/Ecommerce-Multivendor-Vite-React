@@ -1,95 +1,93 @@
-import { Box, Divider } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
-import { Description } from "@mui/icons-material";
+import { Box } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 
-const steps = [
-    { name: "Order Placed", description: "on Thu, 11 Jul", value: "PLACED" },
-    { name: "Packed", description: "Item Packed in Dispatch Warehouse", value: "CONFIRMED" },
-    { name: "Shipped", description: "by Mon, 15 Jul", value: "SHIPPED" },
-    { name: "Arriving", description: "by 16 Jul - 18 Jul", value: "ARRIVING" },
-    { name: "Arrived", description: "by 16 Jul - 18 Jul", value: "DELIVERED" },
-    // { name: "Canceled", description: "by 16 Jul - 18 Jul", value: "CANCELLED" },
+interface Step {
+  name: string;
+  description: string;
+  value: string;
+}
+
+interface OrderStepperProps {
+  orderStatus: string;
+}
+
+const steps: Step[] = [
+  { name: "Order Placed", description: "Order received", value: "PLACED" },
+  { name: "Packed", description: "Packed in warehouse", value: "CONFIRMED" },
+  { name: "Shipped", description: "On the way", value: "SHIPPED" },
+  { name: "Arriving", description: "Expected delivery", value: "ARRIVING" },
+  { name: "Delivered", description: "Order delivered", value: "DELIVERED" },
 ];
 
-const canceledStep = [
-    { name: "Order Placed", description: "on Thu, 11 Jul", value: "PLACED" },
-    { name: "Order Canceled", description: "on Thu, 11 Jul", value: "CANCELLED" },
-
+const canceledSteps: Step[] = [
+  { name: "Order Placed", description: "Order received", value: "PLACED" },
+  { name: "Order Canceled", description: "Order has been canceled", value: "CANCELLED" },
 ];
 
-const currentStep = 2; // Change this value based on the current step
+const OrderStepper: React.FC<OrderStepperProps> = ({ orderStatus }) => {
+  const [statusSteps, setStatusSteps] = useState<Step[]>(steps);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-const OrderStepper = ({ orderStatus }: any) => {
+  useEffect(() => {
+    if (orderStatus === "CANCELLED") {
+      setStatusSteps(canceledSteps);
+      setCurrentIndex(1);
+    } else {
+      setStatusSteps(steps);
+      const index = steps.findIndex((s) => s.value === orderStatus);
+      setCurrentIndex(index >= 0 ? index : 0);
+    }
+  }, [orderStatus]);
 
-    const [statusStep, setStatusStep] = useState(steps);
-
-    useEffect(() => {
-
-        if (orderStatus === 'CANCELLED') {
-            setStatusStep(canceledStep)
-        } else {
-            setStatusStep(steps)
-        }
-
-        // setCurrentStep(orderStatus==='Canceled'? canceledStep : steps)
-// .slice(0,orderStatus==="CANCELLED"?steps.length:steps.length-1)
-    }, [orderStatus])
-    return (
-        <Box className=" mx-auto my-10">
-            {statusStep.map((step, index) => (
-                <>
-                    <div key={index} className={` flex   px-4 `}>
-                        <div className="flex flex-col items-center">
-                            <Box
-                                sx={{ zIndex: -1 }}
-                                className={` w-8 h-8 rounded-full flex items-center justify-center z-10 ${index <= currentStep
-                                        ? " bg-gray-200 text-teal-500"
-                                        : "bg-gray-300 text-gray-600"
-                                    }  `}
-                            >
-                                {step.value === orderStatus ? (
-                                    <CheckCircleIcon />
-                                ) : (
-                                    <FiberManualRecordIcon sx={{ zIndex: -1 }} />
-                                )}
-                            </Box>
-                            {index < statusStep.length - 1 && (
-                                <div
-                                    className={`border h-20 w-[2px] ${index < currentStep
-                                            ? " bg-teal-500"
-                                            : "bg-gray-300 text-gray-600"
-                                        }`}
-                                ></div>
-                            )}
-                        </div>
-
-                        <div className={`ml-2 w-full`}>
-                            <div
-                                className={` ${ step.value===orderStatus
-                                        ? " bg-primary-color p-2 text-white font-medium rounded-md -translate-y-3"
-                                        : ""
-                                    } ${(orderStatus==="CANCELLED" && step.value===orderStatus)?"bg-red-500":""} w-full`}
-                            >
-                                <p
-                                    className={`
-                           
-                            `}
-                                >
-                                    {step.name}
-                                </p>
-                                <p className={` ${step.value===orderStatus
-                                        ? " text-gray-200"
-                                        : "text-gray-500"
-                                    } text-xs `}>{step.description}</p>
-                            </div>
-                        </div>
-                    </div>
-                </>
-            ))}
+  return (
+    <Box className="w-full px-4 md:px-10 my-10">
+      {/* Steps container */}
+      <Box className="relative flex items-center justify-between">
+        {/* Horizontal progress line */}
+        <Box className="absolute top-4 left-0 w-full h-1 bg-gray-300 rounded-full z-0">
+          <Box
+            className="h-1 rounded-full bg-teal-500"
+            style={{ width: `${(currentIndex / (statusSteps.length - 1)) * 100}%` }}
+          />
         </Box>
-    );
+
+        {/* Step circles */}
+        {statusSteps.map((step, index) => {
+          const isCurrent = index === currentIndex;
+          const isCompleted = index < currentIndex;
+          const isCanceled = orderStatus === "CANCELLED" && step.value === "CANCELLED";
+
+          return (
+            <Box key={index} className="relative flex flex-col items-center z-10">
+              {/* Circle */}
+              <Box
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-white
+                  ${isCanceled ? "bg-red-500" : isCurrent || isCompleted ? "bg-teal-500" : "bg-gray-300"}
+                `}
+              >
+                {/* Tick appears on current and completed */}
+                <CheckCircleIcon fontSize="small" />
+              </Box>
+
+              {/* Step name */}
+              <p
+                className={`text-xs mt-2 font-semibold text-center 
+                  ${isCanceled ? "text-red-600" : isCurrent || isCompleted ? "text-teal-700" : "text-gray-500"}
+                `}
+              >
+                {step.name}
+              </p>
+
+              {/* Step description */}
+              <p className="text-[10px] text-gray-400 text-center">{step.description}</p>
+            </Box>
+          );
+        })}
+      </Box>
+    </Box>
+  );
 };
 
 export default OrderStepper;
