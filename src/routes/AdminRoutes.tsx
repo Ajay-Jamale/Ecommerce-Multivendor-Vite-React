@@ -11,7 +11,7 @@ import Deal from "../admin/pages/Home Page/Deal";
 const AdminRoutes = () => {
   return (
     <Routes>
-      <Route path="/main-grid" element={<MainGridTable />} />
+      {/* <Route path="/main-grid" element={<MainGridTable />} /> */}
       <Route path="/" element={<SellersTable />} />
       <Route path="/coupon" element={<Coupon />} />
       <Route path="/add-coupon" element={<CouponForm />} />

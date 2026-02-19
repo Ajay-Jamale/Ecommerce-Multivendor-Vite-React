@@ -1,15 +1,207 @@
-.logo{
-    font-family: "Pacifico", cursive;
-    font-weight: 400;
+/* Navbar.css */
+
+/* Pacifico font for logo */
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+
+.logo {
+    font-family: "Pacifico", cursive !important;
+    font-weight: 400 !important;
     font-style: normal;
+    line-height: 1.2;
+    letter-spacing: normal;
 }
-.category{
+
+/* Category items - normal weight 400 */
+.category {
+    font-weight: 400 !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+/* Category hover state */
+.category-item {
     font-weight: 400;
+    transition: all 0.15s ease;
 }
 
+.category-item:hover {
+    font-weight: 700;
+    padding-left: 8px;
+}
 
+/* Blur background effect */
 .blur-bg {
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(10px); /* For Safari */
-  }
-  
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    transition: backdrop-filter 0.3s ease, background-color 0.3s ease;
+}
+
+/* Category sheet specific styles */
+.category-sheet-item {
+    font-weight: 400;
+    color: #4a4a4a;
+    cursor: pointer;
+    padding: 4px 0;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid transparent;
+}
+
+.category-sheet-item:hover {
+    font-weight: 700;
+    color: #000000;
+    padding-left: 8px;
+    border-bottom-color: #000000;
+}
+
+/* Category title in sheet */
+.category-title {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 2px solid #000000;
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+}
+
+/* Grid borders */
+.category-grid-item {
+    border-right: 2px solid #000000;
+    border-bottom: 2px solid #000000;
+}
+
+.category-grid-item:last-child {
+    border-right: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .category-grid-item {
+        border-right: 2px solid #000000;
+    }
+    
+    .category-grid-item:nth-child(3n) {
+        border-right: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .category-grid-item {
+        border-right: 2px solid #000000;
+    }
+    
+    .category-grid-item:nth-child(2n) {
+        border-right: none;
+    }
+}
+/* Add to existing Navbar.css */
+
+/* Category Sheet Responsive Styles */
+.category-sheet-container {
+    transition: all 0.3s ease;
+}
+
+/* Desktop Grid Items */
+.category-grid-item {
+    transition: background-color 0.2s ease;
+}
+
+.category-grid-item:hover {
+    background-color: #fafafa;
+}
+
+/* Category Sheet Items - Base Style */
+.category-sheet-item {
+    font-weight: 400;
+    color: #4a4a4a;
+    cursor: pointer;
+    padding: 4px 0;
+    transition: all 0.2s ease;
+    font-size: 13px;
+    list-style: none;
+    border-bottom: 1px solid transparent;
+}
+
+.category-sheet-item:hover {
+    font-weight: 700;
+    color: #000000;
+    padding-left: 8px;
+    border-bottom-color: #000000;
+}
+
+/* Mobile Accordion Styles */
+.mobile-category-header {
+    border-bottom: 2px solid #000000;
+    transition: background-color 0.2s ease;
+}
+
+.mobile-category-header:hover {
+    background-color: #f5f5f5;
+}
+
+.mobile-category-content {
+    background-color: #fafafa;
+}
+
+/* Tablet Grid */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .category-sheet-item {
+        font-size: 12px;
+        padding: 3px 0;
+    }
+    
+    .category-sheet-item:hover {
+        padding-left: 6px;
+    }
+}
+
+/* Mobile Styles */
+@media (max-width: 767px) {
+    .category-sheet-item {
+        font-size: 14px;
+        padding: 6px 0;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .category-sheet-item:last-child {
+        border-bottom: none;
+    }
+    
+    .category-sheet-item:hover {
+        padding-left: 12px;
+        background-color: #f0f0f0;
+    }
+}
+
+/* Loading Animation */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.category-sheet-container {
+    animation: slideIn 0.2s ease;
+}
+
+/* Scrollbar Styling */
+.category-sheet-container ::-webkit-scrollbar {
+    width: 6px;
+}
+
+.category-sheet-container ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.category-sheet-container ::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 0;
+}
+
+.category-sheet-container ::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
