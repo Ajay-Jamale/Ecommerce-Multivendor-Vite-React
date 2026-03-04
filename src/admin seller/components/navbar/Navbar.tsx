@@ -13,13 +13,18 @@ const Navbar = ({DrawerList}:any) => {
   };
 
   return (
-    <div className='h-[10vh] flex items-center px-5 border-b'>
+    <div className='h-[10vh] flex items-center px-5 border-b bg-white'>
       <div className='flex items-center gap-3 '>
         <IconButton onClick={toggleDrawer(true)} color='primary'>
           <MenuIcon color='primary' />
         </IconButton>
 
-        <h1 onClick={() => navigate("/")} className='logo text-xl cursor-pointer'>Zosh Bazzar</h1>
+        <h1
+          onClick={() => navigate("/")}
+          className="logo text-xl cursor-pointer tracking-wide"
+        >
+          Shopzy
+        </h1>
       </div>
 
       <Drawer open={open} onClose={toggleDrawer(false)}>

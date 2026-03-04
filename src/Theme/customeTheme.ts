@@ -4,24 +4,27 @@ const customTheme = createTheme({
   palette: {
     mode: "light",
     primary: {
-      main: "#2563EB",   // Soft blue
+      // Amazon-inspired deep header blue
+      main: "#131921",
     },
     secondary: {
-      main: "#64748B",   // Neutral gray
+      // Accent / hover color (subnav)
+      main: "#232F3E",
     },
     background: {
-      default: "#F8FAFC",   // Page background (very light gray)
-      paper: "#FFFFFF",     // Cards & surfaces
+      // Light gray page background like Amazon home
+      default: "#E3E6E6",
+      paper: "#FFFFFF",
     },
     text: {
-      primary: "#1E293B",
-      secondary: "#64748B",
+      primary: "#0F1111",
+      secondary: "#565959",
     },
     
   },
 
   typography: {
-    fontFamily: "Inter, Roboto, sans-serif",
+    fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     h1: { fontWeight: 600 },
     h2: { fontWeight: 600 },
     h3: { fontWeight: 600 },

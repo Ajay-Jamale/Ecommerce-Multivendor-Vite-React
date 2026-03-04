@@ -41,8 +41,8 @@ const ChatBot = ({handleClose,productId}:ChatBotProps) => {
             <div className="w-full lg:w-[40vw] h-[82vh] shadow-2xl bg-white z-50 rounded-lg">
                 <div className=" h-[12%] flex justify-between items-center px-5 bg-slate-100 rounded-t-lg">
                     <div className="flex items-center gap-3 ">
-                        <h1 className="logo">Zosh Bazzar</h1>
-                        <p>Assitant</p>
+                        <h1 className="logo">Shopzy</h1>
+                        <p>Assistant</p>
                     </div>
                    {/* {productId && <div className="flex items-center gap-3">
                         <p>Product id :</p>
@@ -62,7 +62,7 @@ const ChatBot = ({handleClose,productId}:ChatBotProps) => {
 
                 <div className="h-[78%] p-5 flex flex-col py-5 px-5 overflow-y-auto  custom-scrollbar">
 
-                    <p>welcome to zosh bazzar Ai Assistant, you can
+                    <p>Welcome to the Shopzy AI Assistant, you can
                       {productId?` Query About this Product : ${productId}`:"   Query about your cart, and order history here"}
                     </p>
                     { aiChatBot.messages.map((item:any, index:number) =>

@@ -1,10 +1,27 @@
 .custom-border {
-    border: 9px solid;
-    border-color: rgb(255, 58, 91) rgb(99, 99, 99);
-  }
-  
-  .custom-border img {
-    border-radius: 50%;
-  }
-  
- 
+  border: 9px solid;
+  border-color: rgb(255, 58, 91) rgb(99, 99, 99);
+  border-radius: 50%;
+  overflow: hidden;          /* Prevent image overflow */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.custom-border:hover {
+  transform: scale(0.97);    /* Smooth hover shrink */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.custom-border img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;          /* No image stretch */
+  object-position: center;
+  transition: transform 0.5s ease;
+}
+
+.custom-border:hover img {
+  transform: scale(1.08);     /* Smooth zoom */
+}
