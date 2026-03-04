@@ -1,45 +1,91 @@
 import {
-  Avatar,
   Badge,
   Box,
-  Button,
   Drawer,
   IconButton,
   InputBase,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import "./Navbar.css";
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import SearchIcon from "@mui/icons-material/Search";
 import MenuIcon from "@mui/icons-material/Menu";
 import RoomOutlinedIcon from "@mui/icons-material/RoomOutlined";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { FavoriteBorder } from "@mui/icons-material";
 import { mainCategory } from "../../../data/category/mainCategory";
 import DrawerList from "./DrawerList";
+import CategorySheet from "./CategorySheet";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../Redux Toolkit/Store";
 import { searchProduct } from "../../../Redux Toolkit/Customer/ProductSlice";
 
+/** Categories that have a sub-sheet defined */
+const SHEET_CATEGORIES = new Set(["men", "women", "electronics", "home_furniture"]);
+
 const Navbar = () => {
-  const theme = useTheme();
-  const isLarge = useMediaQuery(theme.breakpoints.up("lg"));
-  const isSmall = useMediaQuery(theme.breakpoints.down("md"));
+  const theme  = useTheme();
+  const isSmall = useMediaQuery(theme.breakpoints.down("md")); // < 900px — no hover sheet
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
   const { user, cart, sellers } = useAppSelector((store) => store);
 
-  const [open, setOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  /* ── drawer ──────────────────────────────────────────── */
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const toggleDrawer = (state: boolean) => () => setDrawerOpen(state);
 
-  const toggleDrawer = (state: boolean) => () => {
-    setOpen(state);
+  /* ── search ──────────────────────────────────────────── */
+  const [searchQuery, setSearchQuery]       = useState("");
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [searchFocused, setSearchFocused]   = useState(false);
+
+  /* ── scroll shadow ───────────────────────────────────── */
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const fn = () => setScrolled(window.scrollY > 4);
+    window.addEventListener("scroll", fn, { passive: true });
+    return () => window.removeEventListener("scroll", fn);
+  }, []);
+
+  /* ── hover category sheet ────────────────────────────── */
+  const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /** Start a short delay before closing — lets the mouse move from
+   *  the button into the sheet without the sheet disappearing. */
+  const scheduleClose = useCallback(() => {
+    closeTimer.current = setTimeout(() => setHoveredCategory(null), 120);
+  }, []);
+
+  const cancelClose = useCallback(() => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+  }, []);
+
+  const handleCategoryMouseEnter = (categoryId: string) => {
+    cancelClose();
+    if (SHEET_CATEGORIES.has(categoryId)) {
+      setHoveredCategory(categoryId);
+    } else {
+      setHoveredCategory(null);
+    }
   };
 
+  const handleCategoryMouseLeave = () => scheduleClose();
+
+  /** Called when cursor enters the floating sheet panel */
+  const handleSheetMouseEnter = () => cancelClose();
+
+  /** Called when cursor leaves the floating sheet panel */
+  const handleSheetMouseLeave = () => scheduleClose();
+
+  /** Close sheet when user navigates via CategorySheet */
+  const closeSheet = () => setHoveredCategory(null);
+
+  /* ── misc ────────────────────────────────────────────── */
   const handleSearch = () => {
     if (!searchQuery.trim()) return;
     dispatch(searchProduct(searchQuery));
@@ -51,274 +97,280 @@ const Navbar = () => {
     sellers.profile?.id ? navigate("/seller") : navigate("/become-seller");
   };
 
-  const getInitial = () => {
-    if (!user.user?.fullName) return "";
-    return user.user.fullName.charAt(0).toUpperCase();
-  };
+  const firstName = user.user?.fullName?.split(" ")[0] ?? null;
 
   return (
+    /* The outer wrapper is `position:sticky` so the dropdown can use
+       `position:absolute` relative to it and still sit right below the bar. */
     <Box
-      sx={{
-        zIndex: 50,
-        position: "sticky",
-        top: 0,
-        width: "100%",
-      }}
+      sx={{ zIndex: 1100, position: "sticky", top: 0, width: "100%" }}
       className="navbar"
+      style={{ boxShadow: scrolled ? "0 2px 20px rgba(0,0,0,0.45)" : "none", transition: "box-shadow 0.3s ease" }}
     >
-      {/* Top Amazon-style header */}
-      <div className="navbar-top">
-        <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 px-3 sm:px-4 md:px-6 lg:px-8 h-[56px]">
-          {/* Hamburger for mobile */}
+      {/* ── TOP BAR ──────────────────────────────────────── */}
+      <div
+        className="navbar-top"
+        style={{ background: "linear-gradient(180deg,#1a2332 0%,#131921 100%)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+      >
+        <div className="flex items-center gap-1.5 sm:gap-3 lg:gap-5 px-2 sm:px-4 lg:px-10 h-[60px] min-w-0">
+
+          {/* Hamburger — mobile only */}
           {isSmall && (
-            <IconButton
-              onClick={toggleDrawer(true)}
-              size="small"
-              sx={{ color: "#ffffff" }}
+            <IconButton onClick={toggleDrawer(true)} size="small"
+              sx={{ color: "#fff", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "6px", p: "5px", "&:hover": { borderColor: "#FFD814", color: "#FFD814" } }}
             >
-              <MenuIcon />
+              <MenuIcon sx={{ fontSize: 20 }} />
             </IconButton>
           )}
 
           {/* Logo */}
-          <div
-            onClick={() => navigate("/")}
-            className="cursor-pointer flex items-center gap-1 sm:gap-2 pr-2"
+          <div onClick={() => navigate("/")}
+            className="cursor-pointer flex items-center gap-1.5 sm:gap-2 shrink-0 group"
+            style={{ userSelect: "none" }}
           >
-            <StorefrontIcon
-              sx={{ color: "#FFD814", fontSize: { xs: 26, sm: 30 } }}
-            />
+            <div style={{ width: 32, height: 32, background: "#FFD814", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", transition: "transform 0.2s ease", flexShrink: 0 }}
+              className="group-hover:scale-110"
+            >
+              <StorefrontIcon sx={{ color: "#131921", fontSize: 18 }} />
+            </div>
             <div className="flex flex-col leading-tight">
-              <span className="logo text-lg sm:text-xl text-white">
-                Shopzy
-              </span>
-              <span className="text-[11px] text-gray-200 hidden sm:block">
-                .inspired shopping
-              </span>
+              <span className="logo text-white" style={{ fontSize: 18, letterSpacing: "0.04em" }}>Shopzy</span>
+              <span className="hidden sm:block" style={{ fontSize: 9, color: "#FFD814", letterSpacing: "0.18em", fontWeight: 500 }}>.inspired shopping</span>
             </div>
           </div>
 
           {/* Deliver to */}
           {!isSmall && (
-            <button
-              type="button"
-              className="hidden md:flex flex-col items-start px-2 text-xs text-white hover:outline hover:outline-1 hover:outline-white rounded-sm"
+            <button type="button" className="hidden md:flex flex-col items-start px-2 py-1 text-xs text-white rounded-md"
+              style={{ transition: "background 0.15s", background: "transparent", border: "none", cursor: "pointer" }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
             >
-              <span className="text-[11px] text-gray-200">Deliver to</span>
-              <span className="flex items-center gap-1 font-semibold">
-                <RoomOutlinedIcon sx={{ fontSize: 16 }} />
-                <span>{user.user?.fullName ? user.user.fullName.split(" ")[0] : "Update location"}</span>
+              <span style={{ fontSize: 10, color: "#a0aab4" }}>Deliver to</span>
+              <span className="flex items-center gap-1 font-semibold text-white" style={{ fontSize: 12 }}>
+                <RoomOutlinedIcon sx={{ fontSize: 14, color: "#FFD814" }} />
+                {firstName ?? "Update location"}
               </span>
             </button>
           )}
 
-          {/* Search – full width on desktop, icon-only on very small */}
+          {/* Search */}
           {!isSmall ? (
-            <Box
-              className="navbar-search"
-              sx={{
-                flex: 1,
-                display: "flex",
-                alignItems: "stretch",
-                ml: 2,
-              }}
-            >
-              <Box
-                sx={{
-                  backgroundColor: "#f3f3f3",
-                  px: 1.5,
-                  display: "flex",
-                  alignItems: "center",
-                  borderTopLeftRadius: 4,
-                  borderBottomLeftRadius: 4,
-                  fontSize: 12,
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                All
+            <Box sx={{
+              flex: 1, display: "flex", alignItems: "stretch", mx: 1,
+              borderRadius: "8px", overflow: "hidden",
+              border: searchFocused ? "2px solid #FFD814" : "2px solid transparent",
+              transition: "border-color 0.2s ease",
+              boxShadow: searchFocused ? "0 0 0 3px rgba(255,216,20,0.15)" : "none",
+            }}>
+              <Box sx={{ background: "#f0f2f2", px: 1.5, display: "flex", alignItems: "center", fontSize: 12, cursor: "pointer", color: "#333", gap: 0.3, whiteSpace: "nowrap", "&:hover": { background: "#e3e6e6" } }}>
+                All <KeyboardArrowDownIcon sx={{ fontSize: 14 }} />
               </Box>
-              <Box
-                sx={{
-                  flex: 1,
-                  backgroundColor: "#ffffff",
-                  display: "flex",
-                  alignItems: "center",
-                  px: 1,
-                }}
-              >
-                <InputBase
-                  placeholder="Search Shopzy"
-                  fullWidth
-                  value={searchQuery}
+              <Box sx={{ flex: 1, background: "#fff", display: "flex", alignItems: "center", px: 1.5 }}>
+                <InputBase placeholder="Search Shopzy" fullWidth value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleSearch();
-                  }}
-                  inputProps={{
-                    className: "navbar-search-input",
-                  }}
+                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                  onFocus={() => setSearchFocused(true)}
+                  onBlur={() => setSearchFocused(false)}
+                  inputProps={{ className: "navbar-search-input" }}
                   sx={{ fontSize: 14 }}
                 />
               </Box>
-              <Box
-                onClick={handleSearch}
-                sx={{
-                  backgroundColor: "#febd69",
-                  width: 50,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                  borderTopRightRadius: 4,
-                  borderBottomRightRadius: 4,
-                  "&:hover": { backgroundColor: "#f3a847" },
-                }}
-              >
-                <SearchIcon sx={{ color: "#111", fontSize: 22 }} />
+              <Box onClick={handleSearch} sx={{ background: "#FFD814", width: 52, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "background 0.15s", "&:hover": { background: "#f0c400" } }}>
+                <SearchIcon sx={{ color: "#131921", fontSize: 22 }} />
               </Box>
             </Box>
           ) : (
-            <IconButton
-              onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
-              sx={{ color: "#ffffff", marginLeft: "auto" }}
-            >
+            <IconButton onClick={() => setMobileSearchOpen(!mobileSearchOpen)} sx={{ color: "#fff", ml: "auto" }}>
               <SearchIcon />
             </IconButton>
           )}
 
-          {/* Account / Orders / Cart */}
+          {/* Account & Orders */}
           {!isSmall && (
-            <div className="flex items-center gap-3 ml-3 text-white text-xs">
-              <button
-                type="button"
+            <div className="flex items-center gap-1 ml-1">
+              <button type="button"
                 onClick={() => (user.user ? navigate("/account/orders") : navigate("/login"))}
-                className="text-left hover:outline hover:outline-1 hover:outline-white rounded-sm px-1"
+                className="flex flex-col items-start px-2 py-1 rounded-md text-white"
+                style={{ background: "transparent", border: "none", cursor: "pointer", transition: "background 0.15s" }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
               >
-                <span className="block text-[11px]">
-                  Hello, {user.user ? user.user.fullName.split(" ")[0] : "sign in"}
-                </span>
-                <span className="block font-semibold text-sm">
-                  Account &amp; Lists
-                </span>
+                <span style={{ fontSize: 10, color: "#a0aab4" }}>Hello, {firstName ?? "sign in"}</span>
+                <span style={{ fontSize: 12, fontWeight: 700 }}>Account &amp; Lists</span>
               </button>
-
-              <button
-                type="button"
-                onClick={() => navigate("/account/orders")}
-                className="text-left hover:outline hover:outline-1 hover:outline-white rounded-sm px-1 hidden lg:block"
+              <button type="button" onClick={() => navigate("/account/orders")}
+                className="hidden lg:flex flex-col items-start px-2 py-1 rounded-md text-white"
+                style={{ background: "transparent", border: "none", cursor: "pointer", transition: "background 0.15s" }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
               >
-                <span className="block text-[11px]">Returns</span>
-                <span className="block font-semibold text-sm">&amp; Orders</span>
+                <span style={{ fontSize: 10, color: "#a0aab4" }}>Returns</span>
+                <span style={{ fontSize: 12, fontWeight: 700 }}>&amp; Orders</span>
               </button>
             </div>
           )}
 
-          {/* Wishlist and Cart – always visible */}
-          <div className="flex items-center gap-2 ml-auto sm:ml-2">
-            <IconButton
-              onClick={() => navigate("/wishlist")}
-              size="small"
-              sx={{ color: "#ffffff" }}
+          {/* Wishlist + Cart */}
+          <div className="flex items-center gap-0.5 sm:gap-1 ml-auto sm:ml-1 shrink-0">
+            <IconButton onClick={() => navigate("/wishlist")} size="small"
+              sx={{ color: "#fff", p: "6px", "&:hover": { color: "#FFD814" }, transition: "color 0.2s" }}
             >
-              <FavoriteBorder sx={{ fontSize: 20 }} />
+              <FavoriteBorder sx={{ fontSize: 22 }} />
             </IconButton>
-
-            <button
-              type="button"
-              onClick={() => navigate("/cart")}
-              className="relative flex items-end gap-1 text-white hover:outline hover:outline-1 hover:outline-white rounded-sm px-1 pb-1"
+            <button type="button" onClick={() => navigate("/cart")}
+              className="relative flex items-center gap-1 text-white px-2 py-1 rounded-md"
+              style={{ background: "transparent", border: "none", cursor: "pointer", transition: "background 0.15s" }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
             >
-              <Badge
-                badgeContent={cart.cart?.cartItems?.length || 0}
-                color="primary"
-                sx={{
-                  "& .MuiBadge-badge": {
-                    backgroundColor: "#f08804",
-                    color: "#111",
-                    fontWeight: 700,
-                  },
-                }}
+              <Badge badgeContent={cart.cart?.cartItems?.length || 0}
+                sx={{ "& .MuiBadge-badge": { background: "#FFD814", color: "#131921", fontWeight: 800, fontSize: 11, minWidth: 18, height: 18 } }}
               >
                 <AddShoppingCartIcon sx={{ fontSize: 26 }} />
               </Badge>
-              <span className="hidden sm:block font-semibold text-sm">
-                Cart
-              </span>
+              <span className="hidden sm:block font-semibold text-sm ml-1">Cart</span>
             </button>
           </div>
         </div>
 
-        {/* Mobile search bar */}
+        {/* Mobile search expansion */}
         {isSmall && mobileSearchOpen && (
-          <div className="px-3 pb-2 bg-[#131921]">
-            <div className="flex items-stretch bg-white rounded-md overflow-hidden">
-              <InputBase
-                placeholder="Search Shopzy"
-                fullWidth
-                value={searchQuery}
+          <div style={{ background: "#1a2332", borderTop: "1px solid rgba(255,255,255,0.08)", padding: "0 12px 12px" }}>
+            <div className="flex items-stretch overflow-hidden" style={{ borderRadius: 8, border: "2px solid #FFD814" }}>
+              <InputBase placeholder="Search Shopzy" fullWidth value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleSearch();
-                }}
-                sx={{ px: 1.5, py: 0.5, fontSize: 14 }}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                sx={{ px: 2, py: 0.8, fontSize: 14, background: "#fff", minWidth: 0 }}
               />
-              <button
-                type="button"
-                onClick={handleSearch}
-                className="px-3 bg-[#febd69] flex items-center justify-center"
+              <button type="button" onClick={handleSearch}
+                style={{ padding: "0 16px", background: "#FFD814", border: "none", cursor: "pointer", display: "flex", alignItems: "center", flexShrink: 0 }}
               >
-                <SearchIcon sx={{ color: "#111" }} />
+                <SearchIcon sx={{ color: "#131921" }} />
               </button>
             </div>
           </div>
         )}
       </div>
 
-      {/* Bottom nav row with categories */}
-      <div className="navbar-bottom">
-        <div className="flex items-center gap-3 px-3 sm:px-4 md:px-6 lg:px-8 h-[40px] text-sm overflow-x-auto">
-          {/* All menu opens drawer */}
-          <button
-            type="button"
-            onClick={toggleDrawer(true)}
-            className="flex items-center gap-1 navbar-link"
+      {/* ── BOTTOM CATEGORY BAR + HOVER SHEET ─────────────── */}
+      <div
+        className="navbar-bottom"
+        style={{ background: "linear-gradient(180deg,#2a3f55 0%,#232f3e 100%)", borderBottom: "1px solid rgba(255,255,255,0.06)", position: "relative" }}
+      >
+        {/* Category pills row */}
+        <div className="navbar-bottom-inner flex items-center gap-1 px-2 sm:px-4 lg:px-10 overflow-x-auto" style={{ height: 42 }}>
+
+          {/* "All" — opens drawer */}
+          <button type="button" onClick={toggleDrawer(true)}
+            className="navbar-link flex items-center gap-1.5 shrink-0"
+            style={{ fontWeight: 700, color: "#fff" }}
           >
             <MenuIcon sx={{ fontSize: 18 }} />
-            <span className="font-semibold">All</span>
+            <span>All</span>
           </button>
 
-          {mainCategory.slice(0, 8).map((item) => (
-            <button
-              key={item.categoryId}
-              type="button"
-              onClick={() => navigate(`/products/${item.categoryId}`)}
-              className="navbar-link hidden sm:inline-flex"
-            >
-              {item.name}
-            </button>
-          ))}
+          <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.15)", margin: "0 4px", flexShrink: 0 }} />
 
-          <button
-            type="button"
-            onClick={becomeSellerClick}
-            className="navbar-link ml-auto hidden md:inline-flex"
+          {/* Category buttons — hover opens sheet on desktop */}
+          {mainCategory.slice(0, 8).map((item) => {
+            const hasSheet = !isSmall && SHEET_CATEGORIES.has(item.categoryId);
+            const isActive = hoveredCategory === item.categoryId;
+
+            return (
+              <button
+                key={item.categoryId}
+                type="button"
+                className="navbar-link hidden sm:inline-flex shrink-0 items-center gap-1"
+                style={{
+                  color: isActive ? "#FFD814" : undefined,
+                  borderColor: isActive ? "rgba(255,255,255,0.55)" : undefined,
+                  background: isActive ? "rgba(255,255,255,0.1)" : undefined,
+                  position: "relative",
+                }}
+                onClick={() => navigate(`/products/${item.categoryId}`)}
+                onMouseEnter={() => hasSheet ? handleCategoryMouseEnter(item.categoryId) : setHoveredCategory(null)}
+                onMouseLeave={() => hasSheet ? handleCategoryMouseLeave() : undefined}
+              >
+                {item.name}
+                {hasSheet && (
+                  <KeyboardArrowDownIcon
+                    sx={{
+                      fontSize: 14,
+                      transition: "transform 0.2s ease",
+                      transform: isActive ? "rotate(180deg)" : "rotate(0deg)",
+                      opacity: 0.7,
+                    }}
+                  />
+                )}
+                {/* Active underline indicator */}
+                {isActive && (
+                  <span style={{
+                    position: "absolute",
+                    bottom: -1,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    width: "80%",
+                    height: 2,
+                    background: "#FFD814",
+                    borderRadius: 1,
+                  }} />
+                )}
+              </button>
+            );
+          })}
+
+          <div style={{ flex: 1 }} />
+
+          {/* Sell on Shopzy */}
+          <button type="button" onClick={becomeSellerClick}
+            className="hidden md:inline-flex shrink-0 items-center gap-1"
+            style={{ fontSize: "0.8rem", fontWeight: 600, padding: "4px 14px", borderRadius: 20, border: "1px solid #FFD814", color: "#FFD814", background: "transparent", cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s ease" }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#FFD814"; (e.currentTarget as HTMLButtonElement).style.color = "#131921"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = "#FFD814"; }}
           >
             Sell on Shopzy
           </button>
         </div>
+
+        {/* ── HOVER DROPDOWN SHEET ──────────────────────────
+            Sits absolutely below the bottom bar.
+            Mouse-enter cancels the close timer so moving from
+            button → sheet doesn't flicker.                   */}
+        {!isSmall && hoveredCategory && (
+          <div
+            onMouseEnter={handleSheetMouseEnter}
+            onMouseLeave={handleSheetMouseLeave}
+            style={{
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              right: 0,
+              zIndex: 1200,
+              background: "#ffffff",
+              boxShadow: "0 16px 48px rgba(0,0,0,0.22)",
+              borderTop: "2px solid #FFD814",
+              maxHeight: "70vh",
+              overflowY: "auto",
+              animation: "sheetSlideDown 0.18s ease",
+            }}
+            className="styled-scrollbar"
+          >
+            {/* Thin top accent line per category */}
+            <CategorySheet
+              selectedCategory={hoveredCategory}
+              onClose={closeSheet}
+              /* pass a no-op toggleDrawer so CategorySheet's
+                 handleCategoryClick can still call toggleDrawer(false)() */
+              toggleDrawer={() => () => { closeSheet(); }}
+            />
+          </div>
+        )}
       </div>
 
-      {/* Drawer for mobile / All menu */}
-      <Drawer
-        open={open}
-        onClose={toggleDrawer(false)}
-        PaperProps={{
-          sx: {
-            width: { xs: 280, sm: 320 },
-            backgroundColor: "#ffffff",
-          },
-        }}
+      {/* Mobile / "All" Drawer */}
+      <Drawer open={drawerOpen} onClose={toggleDrawer(false)}
+        PaperProps={{ sx: { width: { xs: 300, sm: 340 }, background: "#fff", boxShadow: "8px 0 40px rgba(0,0,0,0.25)" } }}
       >
         <DrawerList toggleDrawer={toggleDrawer} />
       </Drawer>

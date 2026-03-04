@@ -1,20 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import {
-  FaFacebookF,
-  FaTwitter,
-  FaInstagram,
-  FaLinkedinIn,
-  FaCcVisa,
-  FaCcMastercard,
-  FaCcPaypal,
-  FaCcAmex,
-  FaApple,
-  FaGooglePay,
-  FaArrowRight,
-  FaShieldAlt,
-  FaTruck,
-  FaUndo,
-  FaHeadset,
+  FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn,
+  FaCcVisa, FaCcMastercard, FaCcPaypal, FaCcAmex,
+  FaApple, FaGooglePay, FaArrowRight, FaShieldAlt,
+  FaTruck, FaUndo, FaHeadset,
 } from "react-icons/fa";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import { useNavigate } from "react-router-dom";
@@ -23,376 +12,390 @@ import "../Navbar/Navbar.css";
 const Footer = () => {
   const navigate = useNavigate();
   const currentYear = new Date().getFullYear();
+  const [email, setEmail] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
 
   const footerLinks = {
     shop: [
-      { name: "Men's Collection", path: "/products/men" },
+      { name: "Men's Collection",   path: "/products/men" },
       { name: "Women's Collection", path: "/products/women" },
-      { name: "Electronics", path: "/products/electronics" },
-      { name: "Furniture", path: "/products/furniture" },
-      { name: "New Arrivals", path: "/new-arrivals" },
-      { name: "Best Sellers", path: "/best-sellers" },
+      { name: "Electronics",        path: "/products/electronics" },
+      { name: "Furniture",          path: "/products/furniture" },
+      { name: "New Arrivals",       path: "/new-arrivals" },
+      { name: "Best Sellers",       path: "/best-sellers" },
     ],
     support: [
-      { name: "Help Center", path: "/help" },
+      { name: "Help Center",          path: "/help" },
       { name: "Shipping Information", path: "/shipping" },
-      { name: "Returns & Exchanges", path: "/returns" },
-      { name: "Order Tracking", path: "/track-order" },
-      { name: "FAQs", path: "/faqs" },
-      { name: "Contact Us", path: "/contact" },
+      { name: "Returns & Exchanges",  path: "/returns" },
+      { name: "Order Tracking",       path: "/track-order" },
+      { name: "FAQs",                 path: "/faqs" },
+      { name: "Contact Us",           path: "/contact" },
     ],
     company: [
-      { name: "About Us", path: "/about" },
-      { name: "Careers", path: "/careers" },
-      { name: "Blog", path: "/blog" },
-      { name: "Press", path: "/press" },
-      { name: "Affiliates", path: "/affiliates" },
+      { name: "About Us",       path: "/about" },
+      { name: "Careers",        path: "/careers" },
+      { name: "Blog",           path: "/blog" },
+      { name: "Press",          path: "/press" },
+      { name: "Affiliates",     path: "/affiliates" },
       { name: "Sustainability", path: "/sustainability" },
     ],
     legal: [
-      { name: "Privacy Policy", path: "/privacy" },
-      { name: "Terms of Service", path: "/terms" },
-      { name: "Cookie Policy", path: "/cookies" },
+      { name: "Privacy Policy",  path: "/privacy" },
+      { name: "Terms of Service",path: "/terms" },
+      { name: "Cookie Policy",   path: "/cookies" },
       { name: "GDPR Compliance", path: "/gdpr" },
-      { name: "Security", path: "/security" },
+      { name: "Security",        path: "/security" },
     ],
   };
 
   const features = [
-    { icon: <FaTruck />, title: "Free Shipping", desc: "On orders" },
-    { icon: <FaUndo />, title: "Easy Returns", desc: "10-day return policy" },
-    {
-      icon: <FaShieldAlt />,
-      title: "Secure Payment",
-      desc: "100% secure checkout",
-    },
-    {
-      icon: <FaHeadset />,
-      title: "24/7 Support",
-      desc: "Dedicated customer service",
-    },
+    { icon: <FaTruck size={22} />,    title: "Free Shipping",  desc: "On orders above ₹499" },
+    { icon: <FaUndo size={22} />,     title: "Easy Returns",   desc: "10-day return policy" },
+    { icon: <FaShieldAlt size={22} />,title: "Secure Payment", desc: "100% secure checkout" },
+    { icon: <FaHeadset size={22} />,  title: "24/7 Support",   desc: "Dedicated customer service" },
   ];
 
+  const socials = [
+    { icon: <FaFacebookF size={15} />,  color: "#1877f2", name: "Facebook" },
+    { icon: <FaTwitter size={15} />,    color: "#1da1f2", name: "Twitter" },
+    { icon: <FaInstagram size={15} />,  color: "#e4405f", name: "Instagram" },
+    { icon: <FaLinkedinIn size={15} />, color: "#0077b5", name: "LinkedIn" },
+  ];
+
+  const handleSubscribe = () => {
+    if (email.includes("@")) { setSubscribed(true); setEmail(""); }
+  };
+
+  /* ── shared micro-styles ───────────────────── */
+  const linkStyle: React.CSSProperties = {
+    fontSize: 13, color: "#94a3b8", cursor: "pointer",
+    display: "flex", alignItems: "center", gap: 8, padding: "2px 0",
+    transition: "all 0.2s ease", listStyle: "none",
+  };
+
+  const smLinkStyle: React.CSSProperties = {
+    fontSize: 12, color: "#64748b", cursor: "pointer", transition: "color 0.2s",
+  };
+
+  const sectionHead: React.CSSProperties = {
+    fontSize: 11, fontWeight: 800, letterSpacing: "0.12em",
+    color: "#FFD814", textTransform: "uppercase", margin: "0 0 20px",
+  };
+
+  const smHead: React.CSSProperties = {
+    fontSize: 10, fontWeight: 800, letterSpacing: "0.12em",
+    textTransform: "uppercase", color: "#64748b", margin: "0 0 14px",
+  };
+
   return (
-    <footer className="bg-gradient-to-b from-white to-gray-50 border-t-2 border-black mt-20">
-      {/* Features Bar */}
-      <div className="border-b-2 border-black bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-20">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-8">
-            {features.map((feature, index) => (
+    <footer style={{ marginTop: 80, background: "#0d1117", color: "#e2e8f0", fontFamily: "system-ui, sans-serif" }}>
+
+      {/* ── FEATURES STRIP ─────────────────────────────── */}
+      <div style={{ background: "#FFD814", borderBottom: "3px solid #131921" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto" }} className="footer-features-padding">
+          <div className="footer-features-grid">
+            {features.map((f, i) => (
               <div
-                key={index}
-                className="flex flex-col items-center text-center group cursor-pointer"
+                key={i}
+                className="footer-feature-item"
+                style={{
+                  display: "flex", alignItems: "center", gap: 14,
+                  padding: "20px 20px",
+                  borderRight: i < 3 ? "1px solid rgba(0,0,0,0.12)" : "none",
+                  cursor: "default", transition: "background 0.2s",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(0,0,0,0.06)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
               >
-                <div className="text-2xl mb-2 group-hover:scale-110 transition-transform duration-300">
-                  {feature.icon}
+                <div style={{
+                  width: 44, height: 44, borderRadius: 12,
+                  background: "rgba(0,0,0,0.1)", display: "flex",
+                  alignItems: "center", justifyContent: "center",
+                  color: "#131921", flexShrink: 0,
+                }}>
+                  {f.icon}
                 </div>
-                <h4 className="font-bold text-sm uppercase tracking-wider mb-1">
-                  {feature.title}
-                </h4>
-                <p className="text-xs text-gray-600 category">{feature.desc}</p>
+                <div>
+                  <p style={{ fontWeight: 800, fontSize: 13, color: "#131921", margin: 0, letterSpacing: "0.03em" }}>{f.title}</p>
+                  <p style={{ fontSize: 11, color: "#374151", margin: "2px 0 0" }} className="category">{f.desc}</p>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Main Footer */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-20 py-16">
-        {/* Top Section with Newsletter */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 mb-16">
-          {/* Brand - Wider on large screens */}
-          <div className="lg:col-span-2">
+      {/* ── MAIN FOOTER BODY ───────────────────────────── */}
+      <div style={{ maxWidth: 1280, margin: "0 auto" }} className="footer-body-padding">
+
+        <div className="footer-main-grid">
+
+          {/* Brand column */}
+          <div>
             <div
               onClick={() => navigate("/")}
-              className="cursor-pointer flex items-center gap-3 mb-6 group"
+              style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, cursor: "pointer" }}
             >
-              <div className="w-12 h-12 border-2 border-black flex items-center justify-center group-hover:bg-black transition-all duration-300 group-hover:scale-110 group-hover:rotate-3">
-                <StorefrontIcon
-                  sx={{
-                    color: "#000000",
-                    fontSize: 26,
-                    transition: "all 0.3s ease",
-                  }}
-                  className="group-hover:text-white"
-                />
+              <div style={{
+                width: 40, height: 40, background: "#FFD814", borderRadius: 10,
+                display: "flex", alignItems: "center", justifyContent: "center", transition: "transform 0.2s",
+              }}>
+                <StorefrontIcon sx={{ color: "#131921", fontSize: 22 }} />
               </div>
-              <span className="text-2xl font-extrabold tracking-wide">
-                Shopzy
-              </span>
+              <span className="logo" style={{ fontSize: 22, color: "#ffffff", fontWeight: 800 }}>Shopzy</span>
             </div>
 
-            <p className="text-gray-700 text-sm leading-relaxed max-w-md mb-6 category">
-              Discover premium quality fashion, electronics, and home
-              essentials. We bring modern lifestyle products with trusted
-              delivery and secure checkout since 2024.
+            <p style={{ fontSize: 13, lineHeight: 1.75, color: "#94a3b8", maxWidth: 320, marginBottom: 28 }} className="category">
+              Discover premium quality fashion, electronics, and home essentials.
+              Trusted delivery and secure checkout since 2024.
             </p>
 
-            {/* Social Icons with hover effects */}
-            <div className="flex gap-3 mb-8">
-              {[
-                {
-                  icon: <FaFacebookF size={16} />,
-                  color: "#1877f2",
-                  name: "Facebook",
-                },
-                {
-                  icon: <FaTwitter size={16} />,
-                  color: "#1da1f2",
-                  name: "Twitter",
-                },
-                {
-                  icon: <FaInstagram size={16} />,
-                  color: "#e4405f",
-                  name: "Instagram",
-                },
-                {
-                  icon: <FaLinkedinIn size={16} />,
-                  color: "#0077b5",
-                  name: "LinkedIn",
-                },
-              ].map((social, index) => (
-                <div
-                  key={index}
-                  className="relative group cursor-pointer"
-                  title={social.name}
+            {/* Socials */}
+            <div style={{ display: "flex", gap: 10, marginBottom: 32, flexWrap: "wrap" }}>
+              {socials.map((s, i) => (
+                <button
+                  key={i} title={s.name}
+                  style={{
+                    width: 38, height: 38, borderRadius: 10,
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    background: "rgba(255,255,255,0.05)", color: "#94a3b8",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    cursor: "pointer", transition: "all 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    const b = e.currentTarget as HTMLButtonElement;
+                    b.style.background = s.color; b.style.color = "#fff";
+                    b.style.borderColor = s.color; b.style.transform = "translateY(-2px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    const b = e.currentTarget as HTMLButtonElement;
+                    b.style.background = "rgba(255,255,255,0.05)"; b.style.color = "#94a3b8";
+                    b.style.borderColor = "rgba(255,255,255,0.12)"; b.style.transform = "translateY(0)";
+                  }}
                 >
-                  <div className="absolute inset-0 bg-black scale-0 group-hover:scale-100 transition-transform duration-300 -z-10"></div>
-                  <div
-                    className="w-10 h-10 border-2 border-black flex items-center justify-center hover:text-white transition-all duration-300 group-hover:border-transparent z-10 relative"
-                    style={{ transition: "all 0.3s ease" }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = social.color;
-                      e.currentTarget.style.borderColor = social.color;
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = "transparent";
-                      e.currentTarget.style.borderColor = "#000000";
-                    }}
-                  >
-                    {social.icon}
-                  </div>
-                </div>
+                  {s.icon}
+                </button>
               ))}
             </div>
 
-            {/* App Store Badges */}
-            <div className="flex gap-3">
-              <div className="border-2 border-black px-4 py-2 flex items-center gap-2 hover:bg-black hover:text-white transition-all duration-300 cursor-pointer group">
-                <FaApple size={20} />
-                <div className="flex flex-col">
-                  <span className="text-[8px] font-bold uppercase">
-                    Download on
-                  </span>
-                  <span className="text-sm font-bold -mt-1">App Store</span>
-                </div>
-              </div>
-              <div className="border-2 border-black px-4 py-2 flex items-center gap-2 hover:bg-black hover:text-white transition-all duration-300 cursor-pointer group">
-                <FaGooglePay size={20} />
-                <div className="flex flex-col">
-                  <span className="text-[8px] font-bold uppercase">
-                    Get it on
-                  </span>
-                  <span className="text-sm font-bold -mt-1">Google Play</span>
-                </div>
-              </div>
+            {/* App badges */}
+            <div className="footer-app-badges">
+              {[
+                { label: "App Store",    sub: "Download on", icon: <FaApple size={18} /> },
+                { label: "Google Play",  sub: "Get it on",   icon: <FaGooglePay size={18} /> },
+              ].map((app) => (
+                <button
+                  key={app.label}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 10,
+                    padding: "10px 14px",
+                    border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10,
+                    background: "rgba(255,255,255,0.04)", color: "#ffffff",
+                    cursor: "pointer", transition: "all 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    const b = e.currentTarget as HTMLButtonElement;
+                    b.style.background = "#FFD814"; b.style.color = "#131921"; b.style.borderColor = "#FFD814";
+                  }}
+                  onMouseLeave={(e) => {
+                    const b = e.currentTarget as HTMLButtonElement;
+                    b.style.background = "rgba(255,255,255,0.04)"; b.style.color = "#fff";
+                    b.style.borderColor = "rgba(255,255,255,0.15)";
+                  }}
+                >
+                  {app.icon}
+                  <div style={{ textAlign: "left" }}>
+                    <div style={{ fontSize: 9, letterSpacing: "0.1em", opacity: 0.7 }}>{app.sub}</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, marginTop: 1 }}>{app.label}</div>
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Shop links */}
           <div>
-            <h3 className="text-sm font-black uppercase tracking-wider mb-6 relative inline-block group">
-              <span className="relative z-10">Shop</span>
-              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-black scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
-            </h3>
-            <ul className="space-y-3">
+            <h3 style={sectionHead}>Shop</h3>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
               {footerLinks.shop.map((link) => (
                 <li
-                  key={link.name}
-                  className="text-sm text-gray-700 cursor-pointer group flex items-center gap-2"
-                  onClick={() => navigate(link.path)}
+                  key={link.name} onClick={() => navigate(link.path)}
+                  style={linkStyle}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLLIElement).style.color = "#ffffff"; (e.currentTarget as HTMLLIElement).style.paddingLeft = "6px"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLLIElement).style.color = "#94a3b8"; (e.currentTarget as HTMLLIElement).style.paddingLeft = "0"; }}
+                  className="category"
                 >
-                  <FaArrowRight
-                    size={10}
-                    className="opacity-0 group-hover:opacity-100 transition-all duration-300 -translate-x-2 group-hover:translate-x-0"
-                  />
-                  <span className="category group-hover:font-bold group-hover:translate-x-1 transition-all duration-300">
-                    {link.name}
-                  </span>
+                  <FaArrowRight size={9} style={{ color: "#FFD814", flexShrink: 0 }} />
+                  {link.name}
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Support */}
+          {/* Support links */}
           <div>
-            <h3 className="text-sm font-black uppercase tracking-wider mb-6 relative inline-block group">
-              <span className="relative z-10">Support</span>
-              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-black scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
-            </h3>
-            <ul className="space-y-3">
+            <h3 style={sectionHead}>Support</h3>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
               {footerLinks.support.map((link) => (
                 <li
-                  key={link.name}
-                  className="text-sm text-gray-700 cursor-pointer group flex items-center gap-2"
-                  onClick={() => navigate(link.path)}
+                  key={link.name} onClick={() => navigate(link.path)}
+                  style={linkStyle}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLLIElement).style.color = "#ffffff"; (e.currentTarget as HTMLLIElement).style.paddingLeft = "6px"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLLIElement).style.color = "#94a3b8"; (e.currentTarget as HTMLLIElement).style.paddingLeft = "0"; }}
+                  className="category"
                 >
-                  <FaArrowRight
-                    size={10}
-                    className="opacity-0 group-hover:opacity-100 transition-all duration-300 -translate-x-2 group-hover:translate-x-0"
-                  />
-                  <span className="category group-hover:font-bold group-hover:translate-x-1 transition-all duration-300">
-                    {link.name}
-                  </span>
+                  <FaArrowRight size={9} style={{ color: "#FFD814", flexShrink: 0 }} />
+                  {link.name}
                 </li>
               ))}
             </ul>
           </div>
 
           {/* Newsletter */}
-          <div className="bg-white p-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-shadow duration-300">
-            <h3 className="text-sm font-black uppercase tracking-wider mb-3">
-              Subscribe Now
-            </h3>
-            <p className="text-xs text-gray-700 mb-4 category">
-              Get 10% off your first order and exclusive offers!
+          <div>
+            <h3 style={sectionHead}>Subscribe</h3>
+            <p style={{ fontSize: 13, color: "#94a3b8", lineHeight: 1.65, marginBottom: 18 }} className="category">
+              Get 10% off your first order and exclusive member offers.
             </p>
 
-            <div className="flex flex-col gap-3">
-              <div className="flex border-2 border-black">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="w-full px-3 py-3 text-sm outline-none bg-white category"
-                />
-                <button className="px-4 bg-black text-white font-bold hover:bg-white hover:text-black border-l-2 border-black transition-all duration-300 group">
-                  <span className="group-hover:scale-110 inline-block transition-transform duration-300">
-                    →
-                  </span>
-                </button>
+            {subscribed ? (
+              <div style={{
+                background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.3)",
+                borderRadius: 10, padding: "14px 16px", fontSize: 13, color: "#4ade80",
+                fontWeight: 600, textAlign: "center",
+              }}>
+                ✓ You're subscribed!
               </div>
-
-              {/* Trust Badge */}
-              <p className="text-[10px] text-gray-500 category flex items-center gap-1">
-                <FaShieldAlt size={10} />
-                No spam. Unsubscribe anytime.
-              </p>
-
-              {/* Payment Methods */}
-              <div className="mt-4 pt-4 border-t-2 border-black">
-                <p className="text-[10px] font-bold uppercase tracking-wider mb-3">
-                  We Accept
-                </p>
-                <div className="flex gap-2 flex-wrap">
-                  <FaCcVisa
-                    size={28}
-                    className="hover:scale-110 transition-transform duration-200"
+            ) : (
+              <div>
+                <div style={{ display: "flex", borderRadius: 10, overflow: "hidden", border: "1px solid rgba(255,255,255,0.12)", marginBottom: 10 }}>
+                  <input
+                    type="email" placeholder="Enter your email"
+                    value={email} onChange={(e) => setEmail(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSubscribe()}
+                    style={{
+                      flex: 1, padding: "12px 14px", background: "rgba(255,255,255,0.06)",
+                      border: "none", outline: "none", color: "#fff",
+                      fontSize: 13, fontFamily: "inherit", minWidth: 0,
+                    }}
                   />
-                  <FaCcMastercard
-                    size={28}
-                    className="hover:scale-110 transition-transform duration-200"
-                  />
-                  <FaCcPaypal
-                    size={28}
-                    className="hover:scale-110 transition-transform duration-200"
-                  />
-                  <FaCcAmex
-                    size={28}
-                    className="hover:scale-110 transition-transform duration-200"
-                  />
+                  <button
+                    onClick={handleSubscribe}
+                    style={{
+                      background: "#FFD814", border: "none", padding: "0 16px",
+                      cursor: "pointer", fontWeight: 800, color: "#131921",
+                      fontSize: 16, whiteSpace: "nowrap", transition: "background 0.15s", flexShrink: 0,
+                    }}
+                    onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "#f0c400")}
+                    onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "#FFD814")}
+                  >
+                    →
+                  </button>
                 </div>
+                <p style={{ fontSize: 10, color: "#64748b", display: "flex", alignItems: "center", gap: 5 }} className="category">
+                  <FaShieldAlt size={9} /> No spam. Unsubscribe anytime.
+                </p>
+              </div>
+            )}
+
+            {/* Payments */}
+            <div style={{ marginTop: 28, paddingTop: 20, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#64748b", marginBottom: 12 }}>
+                We Accept
+              </p>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                {[FaCcVisa, FaCcMastercard, FaCcPaypal, FaCcAmex].map((Icon, i) => (
+                  <Icon key={i} size={30}
+                    style={{ color: "#94a3b8", cursor: "pointer", transition: "all 0.2s" }}
+                    onMouseEnter={(e: any) => { e.currentTarget.style.color = "#fff"; e.currentTarget.style.transform = "scale(1.15) translateY(-2px)"; }}
+                    onMouseLeave={(e: any) => { e.currentTarget.style.color = "#94a3b8"; e.currentTarget.style.transform = "scale(1) translateY(0)"; }}
+                  />
+                ))}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Company Links Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 py-12 border-y-2 border-black">
+        {/* ── SECONDARY LINKS ROW ────────────────────────── */}
+        <div className="footer-secondary-grid">
           {/* Company */}
           <div>
-            <h4 className="text-xs font-black uppercase tracking-wider mb-4">
-              Company
-            </h4>
-            <ul className="space-y-2">
+            <h4 style={smHead}>Company</h4>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
               {footerLinks.company.map((link) => (
-                <li
-                  key={link.name}
-                  className="text-xs text-gray-600 cursor-pointer hover:font-bold hover:pl-2 transition-all duration-200 category"
-                  onClick={() => navigate(link.path)}
-                >
-                  {link.name}
-                </li>
+                <li key={link.name} onClick={() => navigate(link.path)}
+                  style={smLinkStyle}
+                  onMouseEnter={(e) => ((e.currentTarget as HTMLLIElement).style.color = "#e2e8f0")}
+                  onMouseLeave={(e) => ((e.currentTarget as HTMLLIElement).style.color = "#64748b")}
+                  className="category"
+                >{link.name}</li>
               ))}
             </ul>
           </div>
 
           {/* Legal */}
           <div>
-            <h4 className="text-xs font-black uppercase tracking-wider mb-4">
-              Legal
-            </h4>
-            <ul className="space-y-2">
+            <h4 style={smHead}>Legal</h4>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
               {footerLinks.legal.map((link) => (
-                <li
-                  key={link.name}
-                  className="text-xs text-gray-600 cursor-pointer hover:font-bold hover:pl-2 transition-all duration-200 category"
-                  onClick={() => navigate(link.path)}
-                >
-                  {link.name}
-                </li>
+                <li key={link.name} onClick={() => navigate(link.path)}
+                  style={smLinkStyle}
+                  onMouseEnter={(e) => ((e.currentTarget as HTMLLIElement).style.color = "#e2e8f0")}
+                  onMouseLeave={(e) => ((e.currentTarget as HTMLLIElement).style.color = "#64748b")}
+                  className="category"
+                >{link.name}</li>
               ))}
             </ul>
           </div>
 
-          {/* Contact Info */}
-          <div className="lg:col-span-2">
-            <h4 className="text-xs font-black uppercase tracking-wider mb-4">
-              Get in Touch
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="border-2 border-black p-4 hover:bg-black hover:text-white transition-all duration-300 group">
-                <p className="text-xs font-bold mb-1">Email Us</p>
-                <p className="text-xs category group-hover:text-white">
-                  support@shopzy.com
-                </p>
-                <p className="text-xs category group-hover:text-white">
-                  careers@shopzy.com
-                </p>
-              </div>
-              <div className="border-2 border-black p-4 hover:bg-black hover:text-white transition-all duration-300 group">
-                <p className="text-xs font-bold mb-1">Call Us</p>
-                <p className="text-xs category group-hover:text-white">
-                  +1 (800) 123-4567
-                </p>
-                <p className="text-xs category group-hover:text-white">
-                  Mon-Fri 9am-6pm
-                </p>
-              </div>
+          {/* Contact — spans full width on tablet */}
+          <div className="footer-contact-full">
+            <h4 style={smHead}>Get in Touch</h4>
+            <div className="footer-contact-grid">
+              {[
+                { title: "Email Us", lines: ["support@shopzy.com", "careers@shopzy.com"] },
+                { title: "Call Us",  lines: ["+1 (800) 123-4567", "Mon–Fri 9am–6pm"] },
+              ].map((box) => (
+                <div
+                  key={box.title}
+                  style={{
+                    padding: 16, borderRadius: 12,
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    background: "rgba(255,255,255,0.03)", transition: "all 0.2s",
+                  }}
+                  onMouseEnter={(e) => { const d = e.currentTarget as HTMLDivElement; d.style.background = "rgba(255,216,20,0.07)"; d.style.borderColor = "rgba(255,216,20,0.3)"; }}
+                  onMouseLeave={(e) => { const d = e.currentTarget as HTMLDivElement; d.style.background = "rgba(255,255,255,0.03)"; d.style.borderColor = "rgba(255,255,255,0.08)"; }}
+                >
+                  <p style={{ fontSize: 11, fontWeight: 700, color: "#FFD814", margin: "0 0 6px" }}>{box.title}</p>
+                  {box.lines.map((l) => (
+                    <p key={l} style={{ fontSize: 12, color: "#64748b", margin: "2px 0" }} className="category">{l}</p>
+                  ))}
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Bottom Bar */}
-      <div className="border-t-2 border-black bg-black text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-20 py-6">
-          <div className="flex flex-col md:flex-row justify-between items-center text-xs">
-            <p className="category text-gray-300">
-              © {currentYear}{" "}
-              <span className="font-bold text-white">SHOPZY</span>. All rights
-              reserved. Crafted with ♥ for modern shopping
-            </p>
-
-            <div className="flex gap-6 mt-4 md:mt-0">
-              {["Privacy", "Terms", "Cookies", "Accessibility"].map((item) => (
-                <span
-                  key={item}
-                  className="text-gray-300 cursor-pointer hover:text-white hover:border-b hover:border-white transition-all duration-200 category text-xs"
-                >
-                  {item}
-                </span>
-              ))}
-            </div>
+      {/* ── BOTTOM BAR ─────────────────────────────────── */}
+      <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", background: "#060a0f" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto" }} className="footer-bottom-inner">
+          <p style={{ fontSize: 12, color: "#475569", margin: 0 }} className="category">
+            © {currentYear}{" "}
+            <span style={{ fontWeight: 700, color: "#94a3b8" }}>SHOPZY</span>
+            . All rights reserved. Crafted with ♥
+          </p>
+          <div className="footer-bottom-links">
+            {["Privacy", "Terms", "Cookies", "Accessibility"].map((item) => (
+              <span
+                key={item}
+                style={{ fontSize: 11, color: "#475569", cursor: "pointer", transition: "color 0.2s" }}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLSpanElement).style.color = "#94a3b8")}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLSpanElement).style.color = "#475569")}
+                className="category"
+              >{item}</span>
+            ))}
           </div>
         </div>
       </div>

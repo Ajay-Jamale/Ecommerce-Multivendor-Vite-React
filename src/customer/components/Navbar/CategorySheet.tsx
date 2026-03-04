@@ -3,40 +3,38 @@ import { useNavigate } from "react-router-dom";
 import { Box, Typography, IconButton, Collapse } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import "./Navbar.css";
 
-import { menLevelThree } from "../../../data/category/level three/menLevelThree";
-import { menLevelTwo } from "../../../data/category/level two/menLevelTwo";
-import { womenLevelThree } from "../../../data/category/level three/womenLevelThree";
-import { womenLevelTwo } from "../../../data/category/level two/womenLevelTwo";
-import { electronicsLevelTwo } from "../../../data/category/level two/electronicsLavelTwo";
+import { menLevelThree }      from "../../../data/category/level three/menLevelThree";
+import { menLevelTwo }        from "../../../data/category/level two/menLevelTwo";
+import { womenLevelThree }    from "../../../data/category/level three/womenLevelThree";
+import { womenLevelTwo }      from "../../../data/category/level two/womenLevelTwo";
+import { electronicsLevelTwo }   from "../../../data/category/level two/electronicsLavelTwo";
 import { electronicsLevelThree } from "../../../data/category/level three/electronicsLevelThree";
-import { furnitureLevelTwo } from "../../../data/category/level two/furnitureLevleTwo";
-import { furnitureLevelThree } from "../../../data/category/level three/furnitureLevelThree";
+import { furnitureLevelTwo }  from "../../../data/category/level two/furnitureLevleTwo";
+import { furnitureLevelThree }from "../../../data/category/level three/furnitureLevelThree";
 
 const categoryTwo: { [key: string]: any[] } = {
-  men: menLevelTwo,
-  women: womenLevelTwo,
-  electronics: electronicsLevelTwo,
-  home_furniture: furnitureLevelTwo,
+  men: menLevelTwo, women: womenLevelTwo,
+  electronics: electronicsLevelTwo, home_furniture: furnitureLevelTwo,
 };
-
 const categoryThree: { [key: string]: any[] } = {
-  men: menLevelThree,
-  women: womenLevelThree,
-  electronics: electronicsLevelThree,
-  home_furniture: furnitureLevelThree,
+  men: menLevelThree, women: womenLevelThree,
+  electronics: electronicsLevelThree, home_furniture: furnitureLevelThree,
+};
+const accentColors: { [key: string]: string } = {
+  men: "#2563eb", women: "#db2777", electronics: "#0891b2", home_furniture: "#16a34a",
 };
 
 const CategorySheet = ({ selectedCategory, toggleDrawer, setShowSheet }: any) => {
   const navigate = useNavigate();
-  const [expandedSections, setExpandedSections] = React.useState<{[key: string]: boolean}>({});
+  const [expandedSections, setExpandedSections] = React.useState<{ [key: string]: boolean }>({});
 
-  const childCategory = (category: any[], parentCategoryId: string) => {
-    return category?.filter(
-      (child: any) => child.parentCategoryId === parentCategoryId
-    );
-  };
+  const accent = accentColors[selectedCategory] ?? "#131921";
+
+  const childCategory = (category: any[], parentCategoryId: string) =>
+    category?.filter((child: any) => child.parentCategoryId === parentCategoryId);
 
   const handleCategoryClick = (categoryId: string) => {
     if (toggleDrawer) toggleDrawer(false)();
@@ -44,269 +42,140 @@ const CategorySheet = ({ selectedCategory, toggleDrawer, setShowSheet }: any) =>
     navigate("/products/" + categoryId);
   };
 
-  const toggleSection = (categoryId: string) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [categoryId]: !prev[categoryId]
-    }));
-  };
+  const toggleSection = (categoryId: string) =>
+    setExpandedSections((prev) => ({ ...prev, [categoryId]: !prev[categoryId] }));
 
-  // Get category display name
-  const getCategoryTitle = () => {
-    const titles: {[key: string]: string} = {
-      men: "MEN'S COLLECTION",
-      women: "WOMEN'S COLLECTION",
-      electronics: "ELECTRONICS",
-      home_furniture: "FURNITURE & HOME"
-    };
-    return titles[selectedCategory] || selectedCategory.toUpperCase();
-  };
+  const getCategoryTitle = () => ({
+    men: "Men's Collection", women: "Women's Collection",
+    electronics: "Electronics", home_furniture: "Furniture & Home",
+  }[selectedCategory] ?? selectedCategory);
 
   return (
-    <Box
-      sx={{
-        backgroundColor: "#ffffff",
-        border: { xs: "none", lg: "2px solid #000000" },
-        borderTop: "none",
-        height: { xs: "calc(100vh - 80px)", lg: "480px" },
-        overflow: "hidden",
-        display: "flex",
-        flexDirection: "column",
-      }}
-      className="category-sheet-container"
-    >
-      {/* Mobile Header */}
-      <Box
-        sx={{
-          display: { xs: "flex", lg: "none" },
-          alignItems: "center",
-          justifyContent: "space-between",
-          p: 2,
-          borderBottom: "2px solid #000000",
-          backgroundColor: "#fafafa",
-        }}
-      >
-        <Typography
-          className="category"
-          sx={{
-            fontWeight: 700,
-            fontSize: "16px",
-            letterSpacing: "1px",
-          }}
-        >
-          {getCategoryTitle()}
-        </Typography>
+    <Box sx={{ background: "#ffffff", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+
+      {/* ── MOBILE HEADER ──────────────────────────────── */}
+      <Box sx={{
+        display: { xs: "flex", md: "none" },
+        alignItems: "center", justifyContent: "space-between",
+        p: "14px 16px", borderBottom: "1px solid #f1f5f9",
+        background: "#fafafa", flexShrink: 0,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ width: 4, height: 20, borderRadius: 2, background: accent }} />
+          <Typography className="category" sx={{ fontWeight: 700, fontSize: "14px", color: "#0f172a" }}>
+            {getCategoryTitle()}
+          </Typography>
+        </div>
         {setShowSheet && (
-          <IconButton
-            onClick={() => setShowSheet(false)}
-            sx={{
-              border: "2px solid #000000",
-              borderRadius: 0,
-              width: 32,
-              height: 32,
-              "&:hover": {
-                backgroundColor: "#000000",
-                color: "#ffffff",
-              },
-            }}
-          >
-            <ExpandLessIcon />
+          <IconButton onClick={() => setShowSheet(false)}
+            sx={{ background: "#f1f5f9", borderRadius: "8px", width: 32, height: 32, "&:hover": { background: "#131921", color: "#fff" } }}>
+            <ExpandLessIcon sx={{ fontSize: 18 }} />
           </IconButton>
         )}
       </Box>
 
-      {/* Scrollable Content */}
-      <Box
-        sx={{
-          flex: 1,
-          overflowY: "auto",
-          "&::-webkit-scrollbar": {
-            width: "8px",
-          },
-          "&::-webkit-scrollbar-track": {
-            background: "#f1f1f1",
-          },
-          "&::-webkit-scrollbar-thumb": {
-            background: "#888",
-            "&:hover": {
-              background: "#555",
-            },
-          },
-        }}
-      >
-        {/* Desktop Grid View (lg and up) */}
-        <Box
-          sx={{
-            display: { xs: "none", lg: "grid" },
-            gridTemplateColumns: "repeat(5, 1fr)",
-          }}
-        >
-          {categoryTwo[selectedCategory]?.map((item: any, index: number) => (
-            <div
-              key={item.categoryId}
-              className="category-grid-item"
-              style={{
-                borderRight: index % 5 === 4 ? "none" : "2px solid #000000",
-                borderBottom: "2px solid #000000",
-                padding: "20px",
-              }}
-            >
-              {/* Level Two Title */}
-              <Typography
-                className="category"
-                sx={{
-                  fontWeight: 700,
-                  fontSize: "14px",
-                  mb: 3,
-                  pb: 1,
-                  borderBottom: "2px solid #000000",
-                  textTransform: "uppercase",
-                  letterSpacing: "1px",
-                  color: "#000000",
-                }}
-              >
-                {item.name}
-              </Typography>
+      {/* ── SCROLLABLE BODY ────────────────────────────── */}
+      <Box sx={{ flex: 1, overflowY: "auto" }} className="styled-scrollbar">
 
-              {/* Level Three List */}
-              <ul className="space-y-2">
-                {childCategory(
-                  categoryThree[selectedCategory],
-                  item.categoryId
-                )?.map((child: any) => (
-                  <li
-                    key={child.categoryId}
-                    onClick={() => handleCategoryClick(child.categoryId)}
-                    className="category-sheet-item"
-                  >
-                    {child.name}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </Box>
+        {/* ── DESKTOP (md+) ─────────────────────────────── */}
+        <Box sx={{ display: { xs: "none", md: "block" }, p: { md: "24px 20px", lg: "24px 28px" } }}>
+          {/* Title row */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24, paddingBottom: 16, borderBottom: "1px solid #f1f5f9", flexWrap: "wrap" }}>
+            <div style={{ width: 4, height: 22, borderRadius: 2, background: accent, flexShrink: 0 }} />
+            <span style={{ fontSize: 18, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.01em" }}>{getCategoryTitle()}</span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: accent, background: `${accent}18`, padding: "3px 10px", borderRadius: 20 }}>
+              {categoryTwo[selectedCategory]?.length ?? 0} sections
+            </span>
+          </div>
 
-        {/* Tablet View (md) */}
-        <Box
-          sx={{
-            display: { xs: "none", md: "block", lg: "none" },
-            p: 2,
-          }}
-        >
-          <div className="grid grid-cols-3 gap-4">
+          {/* Category grid — uses CSS class for responsive columns */}
+          <div className="category-desktop-grid">
             {categoryTwo[selectedCategory]?.map((item: any) => (
-              <div
-                key={item.categoryId}
-                className="border-2 border-black p-4"
-              >
-                {/* Level Two Title */}
-                <Typography
-                  className="category"
-                  sx={{
-                    fontWeight: 700,
-                    fontSize: "13px",
-                    mb: 2,
-                    pb: 1,
-                    borderBottom: "2px solid #000000",
-                    textTransform: "uppercase",
-                  }}
+              <div key={item.categoryId}>
+                <div
+                  style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "#0f172a", marginBottom: 12, paddingBottom: 8, borderBottom: `2px solid ${accent}`, cursor: "pointer", transition: "color 0.2s" }}
+                  onMouseEnter={(e) => ((e.currentTarget as HTMLDivElement).style.color = accent)}
+                  onMouseLeave={(e) => ((e.currentTarget as HTMLDivElement).style.color = "#0f172a")}
+                  onClick={() => handleCategoryClick(item.categoryId)}
                 >
                   {item.name}
-                </Typography>
-
-                {/* Level Three List (first 5 items) */}
-                <ul className="space-y-1">
-                  {childCategory(
-                    categoryThree[selectedCategory],
-                    item.categoryId
-                  )?.slice(0, 5).map((child: any) => (
+                </div>
+                <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+                  {childCategory(categoryThree[selectedCategory], item.categoryId)?.map((child: any) => (
                     <li
-                      key={child.categoryId}
-                      onClick={() => handleCategoryClick(child.categoryId)}
-                      className="text-xs category-sheet-item"
+                      key={child.categoryId} onClick={() => handleCategoryClick(child.categoryId)}
+                      style={{ fontSize: 12, color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center", gap: 5, padding: "3px 0", transition: "all 0.15s", borderRadius: 4 }}
+                      onMouseEnter={(e) => { const el = e.currentTarget as HTMLLIElement; el.style.color = accent; el.style.paddingLeft = "6px"; }}
+                      onMouseLeave={(e) => { const el = e.currentTarget as HTMLLIElement; el.style.color = "#64748b"; el.style.paddingLeft = "0"; }}
+                      className="category"
                     >
+                      <ChevronRightIcon sx={{ fontSize: 11, flexShrink: 0, opacity: 0.5 }} />
                       {child.name}
                     </li>
                   ))}
-                  {childCategory(categoryThree[selectedCategory], item.categoryId)?.length > 5 && (
-                    <li
-                      onClick={() => handleCategoryClick(item.categoryId)}
-                      className="text-xs font-bold cursor-pointer hover:underline mt-2"
-                    >
-                      View All +
-                    </li>
-                  )}
                 </ul>
               </div>
             ))}
           </div>
+
+          {/* Browse-all CTA */}
+          <div style={{ marginTop: 28, paddingTop: 20, borderTop: "1px solid #f1f5f9" }}>
+            <button
+              onClick={() => handleCategoryClick(selectedCategory)}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                padding: "10px 20px", borderRadius: 8, border: `1.5px solid ${accent}`,
+                background: "transparent", color: accent, fontSize: 12, fontWeight: 700,
+                cursor: "pointer", transition: "all 0.2s ease", fontFamily: "inherit",
+              }}
+              onMouseEnter={(e) => { const b = e.currentTarget as HTMLButtonElement; b.style.background = accent; b.style.color = "#fff"; }}
+              onMouseLeave={(e) => { const b = e.currentTarget as HTMLButtonElement; b.style.background = "transparent"; b.style.color = accent; }}
+            >
+              Browse all {getCategoryTitle()} →
+            </button>
+          </div>
         </Box>
 
-        {/* Mobile View (xs) */}
-        <Box
-          sx={{
-            display: { xs: "block", md: "none" },
-            p: 2,
-          }}
-        >
+        {/* ── MOBILE ACCORDION (xs–sm) ──────────────────── */}
+        <Box sx={{ display: { xs: "block", md: "none" }, p: "12px" }}>
           {categoryTwo[selectedCategory]?.map((item: any) => (
-            <div
-              key={item.categoryId}
-              className="mb-4 border-2 border-black"
-            >
-              {/* Mobile Category Header */}
+            <div key={item.categoryId} style={{ marginBottom: 8, borderRadius: 12, border: "1px solid #f1f5f9", overflow: "hidden" }}>
               <div
                 onClick={() => toggleSection(item.categoryId)}
-                className="flex items-center justify-between p-4 bg-white cursor-pointer"
+                style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", background: expandedSections[item.categoryId] ? "#fafafa" : "#fff", cursor: "pointer", transition: "background 0.15s" }}
               >
-                <Typography
-                  className="category"
-                  sx={{
-                    fontWeight: 700,
-                    fontSize: "14px",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {item.name}
-                </Typography>
-                <IconButton
-                  size="small"
-                  sx={{
-                    border: "1px solid #000000",
-                    borderRadius: 0,
-                    padding: "4px",
-                  }}
-                >
-                  {expandedSections[item.categoryId] ? (
-                    <ExpandLessIcon fontSize="small" />
-                  ) : (
-                    <ExpandMoreIcon fontSize="small" />
-                  )}
-                </IconButton>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  {expandedSections[item.categoryId] && <div style={{ width: 3, height: 16, borderRadius: 2, background: accent }} />}
+                  <Typography className="category" sx={{ fontWeight: 700, fontSize: "13px", color: expandedSections[item.categoryId] ? "#0f172a" : "#475569" }}>
+                    {item.name}
+                  </Typography>
+                </div>
+                <div style={{ width: 28, height: 28, borderRadius: 8, background: expandedSections[item.categoryId] ? accent : "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}>
+                  {expandedSections[item.categoryId]
+                    ? <ExpandLessIcon sx={{ fontSize: 16, color: "#fff" }} />
+                    : <ExpandMoreIcon sx={{ fontSize: 16, color: "#64748b" }} />}
+                </div>
               </div>
-
-              {/* Mobile Category Content */}
               <Collapse in={expandedSections[item.categoryId]}>
-                <div className="p-4 border-t-2 border-black bg-gray-50">
-                  <ul className="space-y-3">
-                    {childCategory(
-                      categoryThree[selectedCategory],
-                      item.categoryId
-                    )?.map((child: any) => (
+                <div style={{ padding: "4px 16px 16px", background: "#fafafa", borderTop: "1px solid #f1f5f9" }}>
+                  <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+                    {childCategory(categoryThree[selectedCategory], item.categoryId)?.map((child: any) => (
                       <li
-                        key={child.categoryId}
-                        onClick={() => handleCategoryClick(child.categoryId)}
-                        className="text-sm category-sheet-item pl-2"
+                        key={child.categoryId} onClick={() => handleCategoryClick(child.categoryId)}
+                        style={{ fontSize: 13, color: "#475569", cursor: "pointer", padding: "4px 0", display: "flex", alignItems: "center", gap: 6, transition: "color 0.15s" }}
+                        onMouseEnter={(e) => ((e.currentTarget as HTMLLIElement).style.color = accent)}
+                        onMouseLeave={(e) => ((e.currentTarget as HTMLLIElement).style.color = "#475569")}
+                        className="category"
                       >
+                        <ChevronRightIcon sx={{ fontSize: 12, color: accent, flexShrink: 0 }} />
                         {child.name}
                       </li>
                     ))}
                     <li
                       onClick={() => handleCategoryClick(item.categoryId)}
-                      className="text-sm font-bold cursor-pointer hover:underline pt-2 border-t border-gray-300 mt-2"
+                      style={{ fontSize: 12, fontWeight: 700, color: accent, cursor: "pointer", paddingTop: 8, marginTop: 4, borderTop: "1px solid #f1f5f9" }}
                     >
-                      Browse All {item.name}
+                      Browse All {item.name} →
                     </li>
                   </ul>
                 </div>
@@ -316,30 +185,18 @@ const CategorySheet = ({ selectedCategory, toggleDrawer, setShowSheet }: any) =>
         </Box>
       </Box>
 
-      {/* Mobile Footer */}
-      <Box
-        sx={{
-          display: { xs: "flex", lg: "none" },
-          p: 2,
-          borderTop: "2px solid #000000",
-          backgroundColor: "#fafafa",
-          justifyContent: "space-between",
-        }}
-      >
-        <Typography className="category" sx={{ fontSize: "12px" }}>
-          {categoryTwo[selectedCategory]?.length || 0} Categories
+      {/* ── MOBILE FOOTER ──────────────────────────────── */}
+      <Box sx={{
+        display: { xs: "flex", md: "none" },
+        p: "12px 16px", borderTop: "1px solid #f1f5f9",
+        background: "#fafafa", justifyContent: "space-between", alignItems: "center", flexShrink: 0,
+      }}>
+        <Typography className="category" sx={{ fontSize: "11px", color: "#94a3b8" }}>
+          {categoryTwo[selectedCategory]?.length || 0} sections
         </Typography>
         <Typography
-          onClick={() => handleCategoryClick(selectedCategory)}
-          className="category"
-          sx={{
-            fontSize: "12px",
-            fontWeight: 700,
-            cursor: "pointer",
-            "&:hover": {
-              textDecoration: "underline",
-            },
-          }}
+          onClick={() => handleCategoryClick(selectedCategory)} className="category"
+          sx={{ fontSize: "12px", fontWeight: 700, cursor: "pointer", color: "#fff", background: accent, px: "12px", py: "5px", borderRadius: "20px", "&:hover": { opacity: 0.9 } }}
         >
           Browse All →
         </Typography>
