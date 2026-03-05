@@ -14,12 +14,12 @@ import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import { isWishlisted } from "../../../../util/isWishlisted";
 import ModeCommentIcon from '@mui/icons-material/ModeComment';
 import ChatBot from "../../ChatBot/ChatBot";
+import LocalShippingOutlinedIcon from "@mui/icons-material/LocalShippingOutlined";
 
 interface ProductCardProps {
-    // images: string[];
-    // categoryId: string | undefined;
     item: Product;
 }
+
 const style = {
     position: 'absolute' as 'absolute',
     top: '50%',
@@ -28,17 +28,26 @@ const style = {
     width: "auto",
     borderRadius: ".5rem",
     boxShadow: 24,
-
 };
+
+const StarRating: React.FC<{ rating: number }> = ({ rating = 4 }) => (
+    <div className="star-rating">
+        {[1, 2, 3, 4, 5].map((i) => (
+            <span key={i} className={`star ${i <= Math.round(rating) ? "filled" : ""}`}>★</span>
+        ))}
+        <span className="rating-count">({rating})</span>
+    </div>
+);
 
 const ProductCard: React.FC<ProductCardProps> = ({ item }) => {
     const [currentImage, setCurrentImage] = useState(0);
     const [isHovered, setIsHovered] = useState(false);
     const [isFavorite, setIsFavorite] = useState(false);
+    const [addedToCart, setAddedToCart] = useState(false);
     const { wishlist } = useAppSelector((store) => store);
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
-    const [showChatBot, setShowChatBot] = useState(false)
+    const [showChatBot, setShowChatBot] = useState(false);
 
     const handleAddWishlist = (event: MouseEvent) => {
         event.stopPropagation();
@@ -51,21 +60,28 @@ const ProductCard: React.FC<ProductCardProps> = ({ item }) => {
         if (isHovered) {
             interval = setInterval(() => {
                 setCurrentImage((prevImage) => (prevImage + 1) % item.images.length);
-            }, 1000); // Change image every 1 second
-        } else if (interval) {
-            clearInterval(interval);
+            }, 1000);
+        } else {
+            setCurrentImage(0);
         }
         return () => clearInterval(interval);
     }, [isHovered, item.images.length]);
 
     const handleShowChatBot = (event: MouseEvent) => {
         event.stopPropagation();
-        setShowChatBot(true)
-    }
+        setShowChatBot(true);
+    };
+
     const handleCloseChatBot = (e: MouseEvent) => {
         e.stopPropagation();
-        setShowChatBot(false)
-    }
+        setShowChatBot(false);
+    };
+
+    const handleAddToCart = (e: MouseEvent) => {
+        e.stopPropagation();
+        setAddedToCart(true);
+        setTimeout(() => setAddedToCart(false), 1800);
+    };
 
     return (
         <>
@@ -75,13 +91,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ item }) => {
                         `/product-details/${item.category?.categoryId}/${item.title}/${item.id}`
                     )
                 }
-                className="group px-4 relative"
+                className={`product-card-wrapper ${isHovered ? "hovered" : ""}`}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
             >
-                <div
-                    className="card "
-                    onMouseEnter={() => setIsHovered(true)}
-                    onMouseLeave={() => setIsHovered(false)}
-                >
+                {/* Image Section */}
+                <div className="card">
                     {item.images.map((image: any, index: number) => (
                         <img
                             key={index}
@@ -93,80 +108,100 @@ const ProductCard: React.FC<ProductCardProps> = ({ item }) => {
                             }}
                         />
                     ))}
+
+                    {/* Wishlist button — always visible */}
+                    <div className="wishlist-btn" onClick={handleAddWishlist}>
+                        {wishlist.wishlist && isWishlisted(wishlist.wishlist, item) ? (
+                            <FavoriteIcon sx={{ color: "#CC0C39", fontSize: 20 }} />
+                        ) : (
+                            <FavoriteBorderIcon sx={{ color: "#555", fontSize: 20 }} />
+                        )}
+                    </div>
+
+                    {/* Hover overlay */}
                     {isHovered && (
-                        <div className="indicator flex flex-col items-center space-y-2">
-                            <div className="flex gap-4">
-                                {item.images.map((item: any, index: number) => (
+                        <div className="indicator">
+                            {/* Image dots */}
+                            <div className="dot-row">
+                                {item.images.map((_: any, index: number) => (
                                     <button
                                         key={index}
-                                        className={`indicator-button ${index === currentImage ? "active" : ""
-                                            }`}
-                                        onClick={() => setCurrentImage(index)}
+                                        className={`indicator-button ${index === currentImage ? "active" : ""}`}
+                                        onClick={(e) => { e.stopPropagation(); setCurrentImage(index); }}
                                     />
                                 ))}
                             </div>
 
-                            <div className="flex gap-3">
-                                {wishlist.wishlist && (
-                                    <Button
-                                        variant="contained"
-                                        color="secondary"
-
-                                        sx={{ zIndex: 10 }}
-                                        className=" z-50"
-                                        onClick={handleAddWishlist}
-                                    >
-                                        {isWishlisted(wishlist.wishlist, item) ? (
-                                            <FavoriteIcon sx={{ color: teal[500] }} />
-                                        ) : (
-                                            <FavoriteBorderIcon sx={{ color: "gray" }} />
-                                        )}
-                                    </Button>
-                                )}
-                                <Button onClick={handleShowChatBot} color="secondary" variant="contained">
+                            {/* Action buttons */}
+                            <div className="action-row">
+                                <Button
+                                    variant="contained"
+                                    color="secondary"
+                                    sx={{ zIndex: 10, minWidth: 0, padding: "6px 10px" }}
+                                    onClick={handleAddWishlist}
+                                >
+                                    {isWishlisted(wishlist.wishlist, item) ? (
+                                        <FavoriteIcon sx={{ color: teal[500] }} />
+                                    ) : (
+                                        <FavoriteBorderIcon sx={{ color: "gray" }} />
+                                    )}
+                                </Button>
+                                <Button
+                                    onClick={handleShowChatBot}
+                                    color="secondary"
+                                    variant="contained"
+                                    sx={{ minWidth: 0, padding: "6px 10px" }}
+                                >
                                     <ModeCommentIcon sx={{ color: teal[500] }} />
                                 </Button>
                             </div>
-
-
                         </div>
                     )}
                 </div>
-                <div className="details pt-3 space-y-1 group-hover-effect  rounded-md ">
-                    <div className="name space-y ">
-                        <h1 className="font-semibold text-lg">
-                            {item.seller?.businessDetails.businessName}
-                        </h1>
-                        <p className="">{item.title}</p>
+
+                {/* Product Details */}
+                <div className="details">
+                    <div className="seller-name">
+                        {item.seller?.businessDetails.businessName}
                     </div>
-                    <div className="price flex items-center gap-3 ">
-                        <span className="font-semibold text-gray-800">
-                            {" "}
-                            ₹{item.sellingPrice}
-                        </span>
-                        <span className="text thin-line-through text-gray-400 ">
-                            ₹{item.mrpPrice}
-                        </span>
-                        <span className="text-[#00927c] font-semibold">
-                            {item.discountPercent}% off
-                        </span>
+                    <p className="product-title">{item.title}</p>
+
+                    <StarRating rating={4.3} />
+
+                    <div className="price-row">
+                        <span className="selling-price">₹{item.sellingPrice}</span>
+                        <span className="mrp-price">₹{item.mrpPrice}</span>
+                        <span className="discount-percent">{item.discountPercent}% off</span>
                     </div>
+
+                    <div className="delivery-info">
+                        <LocalShippingOutlinedIcon sx={{ fontSize: 14, color: "#007600" }} />
+                        <span>FREE delivery <strong>Tomorrow</strong></span>
+                    </div>
+
+                    <button
+                        className={`add-to-cart-btn ${addedToCart ? "added" : ""}`}
+                        onClick={handleAddToCart}
+                    >
+                        {addedToCart ? "✓ Added to Cart" : "Add to Cart"}
+                    </button>
                 </div>
-
             </div>
-            {showChatBot && <section className="absolute left-16 top-0">
-                <Modal
-                    open={true}
-                    onClose={handleCloseChatBot}
-                    aria-labelledby="modal-modal-title"
-                    aria-describedby="modal-modal-description"
-                >
-                    <Box sx={style}>
-                        <ChatBot handleClose={handleCloseChatBot} productId={item.id} />
-                    </Box>
-                </Modal>
 
-            </section>}
+            {showChatBot && (
+                <section className="absolute left-16 top-0">
+                    <Modal
+                        open={true}
+                        onClose={handleCloseChatBot}
+                        aria-labelledby="modal-modal-title"
+                        aria-describedby="modal-modal-description"
+                    >
+                        <Box sx={style}>
+                            <ChatBot handleClose={handleCloseChatBot} productId={item.id} />
+                        </Box>
+                    </Modal>
+                </section>
+            )}
         </>
     );
 };
