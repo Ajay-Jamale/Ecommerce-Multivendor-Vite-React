@@ -2,20 +2,30 @@ import React, { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import {
-  TextField,
-  Button,
-  Box,
-  Grid,
-  Alert,
-  Snackbar,
-  CircularProgress,
+  TextField, Button, Box, Grid, Alert, Snackbar,
+  CircularProgress, Typography, InputAdornment,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import dayjs, { Dayjs } from "dayjs";
+import { Dayjs } from "dayjs";
 import { useAppDispatch, useAppSelector } from "../../../Redux Toolkit/Store";
 import { createCoupon } from "../../../Redux Toolkit/Admin/AdminCouponSlice";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import PercentIcon from "@mui/icons-material/Percent";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+
+const amazonTextField = {
+  "& label.Mui-focused": { color: "#232F3E" },
+  "& .MuiOutlinedInput-root": {
+    fontFamily: '"Amazon Ember", Arial, sans-serif',
+    fontSize: 13,
+    "&:hover fieldset": { borderColor: "#FF9900" },
+    "&.Mui-focused fieldset": { borderColor: "#FF9900", borderWidth: 2 },
+  },
+  "& label": { fontFamily: '"Amazon Ember", Arial, sans-serif', fontSize: 13 },
+  "& .MuiFormHelperText-root": { fontFamily: '"Amazon Ember", Arial, sans-serif', fontSize: 11 },
+};
 
 interface CouponFormValues {
   code: string;
@@ -25,9 +35,11 @@ interface CouponFormValues {
   minimumOrderValue: number;
 }
 
-const CouponForm: React.FC = () => {
+const CreateCouponForm: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { coupone,adminCoupon } = useAppSelector((store) => store);
+
+  // ✅ CORRECT key: matches store registration `adminCoupon: AdminCouponSlice`
+  const { adminCoupon } = useAppSelector((store) => store);
   const [snackbarOpen, setOpenSnackbar] = useState(false);
 
   const formik = useFormik<CouponFormValues>({
@@ -55,15 +67,12 @@ const CouponForm: React.FC = () => {
         .nullable()
         .required("End date is required")
         .typeError("Invalid date")
-        .min(
-          Yup.ref("validityStartDate"),
-          "End date cannot be before start date"
-        ),
+        .min(Yup.ref("validityStartDate"), "End date cannot be before start date"),
       minimumOrderValue: Yup.number()
         .required("Minimum order value is required")
         .min(1, "Minimum order value should be at least 1"),
     }),
-    onSubmit: (values) => {
+    onSubmit: (values, { resetForm }) => {
       const formattedValues = {
         ...values,
         validityStartDate: values.validityStartDate
@@ -73,130 +82,218 @@ const CouponForm: React.FC = () => {
           ? values.validityEndDate.toISOString()
           : null,
       };
-      console.log("Form Values:", formattedValues);
       dispatch(
         createCoupon({
           coupon: formattedValues,
           jwt: localStorage.getItem("jwt") || "",
         })
-      );
-      // Submit form values to the backend
+      ).then((result) => {
+        // ✅ Only reset form on actual success
+        if (createCoupon.fulfilled.match(result)) {
+          resetForm();
+        }
+      });
     },
   });
 
-  const handleCloseSnackbar = () => {
-    setOpenSnackbar(false);
-  };
+  const handleCloseSnackbar = () => setOpenSnackbar(false);
 
   useEffect(() => {
-    if (adminCoupon.couponCreated) {
+    // ✅ Show snackbar for both success and error
+    if (adminCoupon.couponCreated || adminCoupon.error) {
       setOpenSnackbar(true);
     }
-  }, [adminCoupon.couponCreated]);
+  }, [adminCoupon.couponCreated, adminCoupon.error]);
 
   return (
-    <div className="max-w-3xl">
-      <LocalizationProvider dateAdapter={AdapterDayjs}>
-        <Box component="form" onSubmit={formik.handleSubmit} sx={{ mt: 3 }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                id="code"
-                name="code"
-                label="Coupon Code"
-                value={formik.values.code}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.touched.code && Boolean(formik.errors.code)}
-                helperText={formik.touched.code && formik.errors.code}
-                margin="normal"
-              />
+    <Box sx={{
+      maxWidth: 680,
+      backgroundColor: "#fff",
+      border: "1px solid #DDD",
+      borderRadius: "4px",
+      overflow: "hidden",
+      boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+    }}>
+      {/* Header */}
+      <Box sx={{
+        backgroundColor: "#232F3E",
+        px: 3, py: 2,
+        display: "flex", alignItems: "center", gap: 1.5,
+        borderBottom: "3px solid #FF9900",
+      }}>
+        <LocalOfferIcon sx={{ color: "#FF9900", fontSize: 20 }} />
+        <Typography sx={{
+          color: "#fff",
+          fontFamily: '"Amazon Ember", Arial, sans-serif',
+          fontWeight: 700, fontSize: 15,
+        }}>
+          Create New Coupon
+        </Typography>
+      </Box>
+
+      <Box sx={{ p: 3 }}>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <Box component="form" onSubmit={formik.handleSubmit}>
+            <Grid container spacing={2}>
+
+              {/* Coupon Code */}
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  id="code"
+                  name="code"
+                  label="Coupon Code"
+                  placeholder="e.g. SUMMER25"
+                  value={formik.values.code}
+                  // ✅ FIX: use only setFieldValue — avoid double-update race condition
+                  onChange={(e) => formik.setFieldValue("code", e.target.value.toUpperCase())}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.code && Boolean(formik.errors.code)}
+                  helperText={formik.touched.code && formik.errors.code}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LocalOfferIcon sx={{ fontSize: 16, color: "#565959" }} />
+                      </InputAdornment>
+                    ),
+                    sx: { fontFamily: '"Courier New", monospace', fontWeight: 700, letterSpacing: "1px" },
+                  }}
+                  sx={amazonTextField}
+                />
+              </Grid>
+
+              {/* Discount Percentage */}
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  id="discountPercentage"
+                  name="discountPercentage"
+                  label="Discount Percentage"
+                  type="number"
+                  value={formik.values.discountPercentage}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.discountPercentage && Boolean(formik.errors.discountPercentage)}
+                  helperText={formik.touched.discountPercentage && formik.errors.discountPercentage}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <PercentIcon sx={{ fontSize: 16, color: "#565959" }} />
+                      </InputAdornment>
+                    ),
+                    inputProps: { min: 1, max: 100 },
+                  }}
+                  sx={amazonTextField}
+                />
+              </Grid>
+
+              {/* Start Date */}
+              <Grid item xs={12} sm={6}>
+                <DatePicker
+                  label="Validity Start Date"
+                  value={formik.values.validityStartDate}
+                  onChange={(date) => formik.setFieldValue("validityStartDate", date)}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      onBlur: () => formik.setFieldTouched("validityStartDate", true),
+                      error: formik.touched.validityStartDate && Boolean(formik.errors.validityStartDate),
+                      helperText: formik.touched.validityStartDate && (formik.errors.validityStartDate as string),
+                      sx: { ...amazonTextField, "& .MuiInputBase-root": { fontSize: 13, fontFamily: '"Amazon Ember", Arial, sans-serif' } },
+                    },
+                  }}
+                />
+              </Grid>
+
+              {/* End Date */}
+              <Grid item xs={12} sm={6}>
+                <DatePicker
+                  label="Validity End Date"
+                  value={formik.values.validityEndDate}
+                  onChange={(date) => formik.setFieldValue("validityEndDate", date)}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      onBlur: () => formik.setFieldTouched("validityEndDate", true),
+                      error: formik.touched.validityEndDate && Boolean(formik.errors.validityEndDate),
+                      helperText: formik.touched.validityEndDate && (formik.errors.validityEndDate as string),
+                      sx: { ...amazonTextField, "& .MuiInputBase-root": { fontSize: 13, fontFamily: '"Amazon Ember", Arial, sans-serif' } },
+                    },
+                  }}
+                />
+              </Grid>
+
+              {/* Minimum Order Value */}
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  id="minimumOrderValue"
+                  name="minimumOrderValue"
+                  label="Minimum Order Value"
+                  type="number"
+                  value={formik.values.minimumOrderValue}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.minimumOrderValue && Boolean(formik.errors.minimumOrderValue)}
+                  helperText={formik.touched.minimumOrderValue && formik.errors.minimumOrderValue}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <AttachMoneyIcon sx={{ fontSize: 16, color: "#565959" }} />
+                      </InputAdornment>
+                    ),
+                    inputProps: { min: 1 },
+                  }}
+                  sx={amazonTextField}
+                />
+              </Grid>
+
+              {/* Note */}
+              <Grid item xs={12}>
+                <Box sx={{
+                  backgroundColor: "#FFF3CD",
+                  border: "1px solid #FFEAA7",
+                  borderRadius: "3px",
+                  px: 2, py: 1,
+                }}>
+                  <Typography sx={{ fontSize: 12, color: "#856404", fontFamily: '"Amazon Ember", Arial, sans-serif' }}>
+                    <strong>Note:</strong> Coupons will be available to all eligible customers once activated. Ensure the validity period and discount are correct before submitting.
+                  </Typography>
+                </Box>
+              </Grid>
+
+              {/* Submit */}
+              <Grid item xs={12}>
+                <Button
+                  variant="contained"
+                  type="submit"
+                  fullWidth
+                  disabled={adminCoupon.loading}
+                  sx={{
+                    backgroundColor: "#FF9900",
+                    color: "#0F1111",
+                    fontFamily: '"Amazon Ember", Arial, sans-serif',
+                    fontWeight: 700, fontSize: 14,
+                    textTransform: "none",
+                    borderRadius: "20px", py: 1.2,
+                    border: "1px solid #e88b00",
+                    boxShadow: "0 1px 0 rgba(255,255,255,.4) inset, 0 -1px 0 rgba(0,0,0,.15) inset",
+                    "&:hover": { backgroundColor: "#e88b00", boxShadow: "none" },
+                    "&:active": { backgroundColor: "#d47f00" },
+                    "&.Mui-disabled": { backgroundColor: "#f7ca7d", color: "#9d9d9d" },
+                  }}
+                >
+                  {adminCoupon.loading
+                    ? <CircularProgress size={22} sx={{ color: "#0F1111" }} />
+                    : "Create Coupon"
+                  }
+                </Button>
+              </Grid>
             </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                id="discountPercentage"
-                name="discountPercentage"
-                label="Discount Percentage"
-                type="number"
-                value={formik.values.discountPercentage}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={
-                  formik.touched.discountPercentage &&
-                  Boolean(formik.errors.discountPercentage)
-                }
-                helperText={
-                  formik.touched.discountPercentage &&
-                  formik.errors.discountPercentage
-                }
-                margin="normal"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <DatePicker
-                sx={{ width: "100%" }}
-                label="Validity Start Date"
-                value={formik.values.validityStartDate}
-                onChange={(date) =>
-                  formik.setFieldValue("validityStartDate", date)
-                }
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <DatePicker
-                sx={{ width: "100%" }}
-                label="Validity End Date"
-                value={formik.values.validityEndDate}
-                onChange={(date) =>
-                  formik.setFieldValue("validityEndDate", date)
-                }
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                id="minimumOrderValue"
-                name="minimumOrderValue"
-                label="Minimum Order Value"
-                type="number"
-                value={formik.values.minimumOrderValue}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={
-                  formik.touched.minimumOrderValue &&
-                  Boolean(formik.errors.minimumOrderValue)
-                }
-                helperText={
-                  formik.touched.minimumOrderValue &&
-                  formik.errors.minimumOrderValue
-                }
-                margin="normal"
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Button
-                color="primary"
-                variant="contained"
-                type="submit"
-                sx={{ mt: 2 }}
-                fullWidth
-                disabled={adminCoupon.loading}
-              >
-                {adminCoupon.loading ? (
-                  <CircularProgress
-                    size="small"
-                    sx={{ width: "27px", height: "27px" }}
-                  />
-                ) : (
-                  "create coupon"
-                )}
-              </Button>
-            </Grid>
-          </Grid>
-        </Box>
-      </LocalizationProvider>
+          </Box>
+        </LocalizationProvider>
+      </Box>
+
       <Snackbar
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
         open={snackbarOpen}
@@ -207,13 +304,17 @@ const CouponForm: React.FC = () => {
           onClose={handleCloseSnackbar}
           severity={adminCoupon.error ? "error" : "success"}
           variant="filled"
-          sx={{ width: "100%" }}
+          sx={{
+            width: "100%",
+            fontFamily: '"Amazon Ember", Arial, sans-serif',
+            backgroundColor: adminCoupon.error ? "#CC0C39" : "#067D62",
+          }}
         >
           {adminCoupon.error ? adminCoupon.error : "Coupon created successfully"}
         </Alert>
       </Snackbar>
-    </div>
+    </Box>
   );
 };
 
-export default CouponForm;
+export default CreateCouponForm;

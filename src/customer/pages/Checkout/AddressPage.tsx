@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom'
 import AddressForm from './AddresssForm'
 import AddressCard from './AddressCard'
 import AddIcon from '@mui/icons-material/Add';
+import LockIcon from '@mui/icons-material/Lock';
+import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import { createOrder } from '../../../Redux Toolkit/Customer/OrderSlice'
 import { useAppDispatch, useAppSelector } from '../../../Redux Toolkit/Store'
 
@@ -13,130 +15,229 @@ const style = {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    width: 450,
+    width: 480,
     bgcolor: 'background.paper',
+    borderRadius: '10px',
     boxShadow: 24,
     p: 4,
+    outline: 'none',
 };
 
 const paymentGatwayList = [
     {
         value: "RAZORPAY",
         image: "https://razorpay.com/newsroom-content/uploads/2020/12/output-onlinepngtools-1-1.png",
-        label: "Razarpay"
-    },
-    {
-        value: "STRIPE",
-        image: "/stripe_logo.png",
-        label: "Stripe"
+        label: "Razorpay"
     }
-]
-const AddressPage = () => {
-    const navigate = useNavigate()
-    const [value, setValue] = React.useState(0);
-    const dispatch = useAppDispatch();
-    const { user } = useAppSelector(store => store)
-    const [paymentGateway, setPaymentGateway] = useState(paymentGatwayList[0].value);
+];
 
-    const [open, setOpen] = React.useState(false);
+const AddressPage = () => {
+    const navigate = useNavigate();
+    const [selectedIndex, setSelectedIndex] = useState(0);
+    const dispatch = useAppDispatch();
+    const { user } = useAppSelector(store => store);
+    const { loading: orderLoading } = useAppSelector(store => store.orders);
+    const [paymentGateway, setPaymentGateway] = useState(paymentGatwayList[0].value);
+    const [open, setOpen] = useState(false);
+    const [pendingAddress, setPendingAddress] = useState<any>(null);
+
     const handleOpen = () => setOpen(true);
-    const handleClose = () => setOpen(false);
+    const handleClose = () => {
+        setOpen(false);
+        // If user saved a new address via form, use it immediately
+        if (pendingAddress) {
+            setPendingAddress(null);
+        }
+    };
+
+    const handleAddressSaved = (address: any) => {
+        setPendingAddress(address);
+        // Dispatch createOrder with the freshly entered address directly
+        if (!orderLoading) {
+            dispatch(createOrder({
+                paymentGateway,
+                address,
+                jwt: localStorage.getItem('jwt') || '',
+            }));
+        }
+    };
 
     const handleChange = (event: any) => {
-        console.log("-----", event.target.value)
-        setValue(event.target.value);
+        setSelectedIndex(Number(event.target.value));
     };
 
     const handleCreateOrder = () => {
-        if (user.user?.addresses)
+        if (orderLoading) return;  // prevent duplicate dispatches
+        if (user.user?.addresses) {
             dispatch(createOrder({
                 paymentGateway,
-                address: user.user?.addresses[value],
+                address: user.user.addresses[selectedIndex],
                 jwt: localStorage.getItem('jwt') || ""
-            }))
-    }
-
-    const handlePaymentChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setPaymentGateway((event.target as HTMLInputElement).value);
+            }));
+        }
     };
 
+    const handlePaymentChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setPaymentGateway(event.target.value);
+    };
+
+    const addresses = user.user?.addresses ?? [];
+
     return (
-        <div className='pt-10 px-5 sm:px-10 md:px-44 lg:px-60 min-h-screen '>
-            <div className='space-y-5 lg:space-y-0 lg:grid grid-cols-3 lg:gap-9 '>
+        <div className='min-h-screen bg-[#EAEDED] pt-6 pb-12 px-4 sm:px-8 lg:px-20'>
 
-                <div className="col-span-2 space-y-5">
-
-                    <div className='flex justify-between items-center'>
-                        <span className='font-semibold'>Select Dilivery Address</span>
-                        <Button onClick={handleOpen} variant='outlined'>Add New Address</Button>
-
-                    </div>
-                    <div className='text-xs font-medium space-y-5'>
-                        <p>Saved Addreses</p>
-                        <div className='space-y-3'>
-                            {user.user?.addresses?.map((item, index) => <AddressCard
-                                key={item.id}
-                                item={item}
-                                selectedValue={value} value={index}
-                                handleChange={handleChange} />)}
-                        </div>
-                    </div>
-                    <div className='py-4 px-5 rounded-md border'>
-
-                        <Button onClick={handleOpen} startIcon={<AddIcon />}>Add New Address</Button>
-
-                    </div>
-                </div>
-                <div className="col-span-1 text-sm space-y-3 ">
-                    <section className='space-y-3 border p-5 rounded-md'>
-                        <h1 className='text-primary-color font-medium pb-2 text-center'>Chose Payment Gatway</h1>
-
-                        <RadioGroup
-                            row
-                            aria-labelledby="demo-row-radio-buttons-group-label"
-                            name="row-radio-buttons-group"
-                            className='flex justify-between pr-0'
-                            onChange={handlePaymentChange}
-                            value={paymentGateway}
-                        >
-                            {paymentGatwayList.map((item) => <FormControlLabel className={`border w-[45%] flex justify-center rounded-md pr-2 ${paymentGateway === item.value ? "border-primary-color" : ""}`} value={item.value} control={<Radio />} label={<div>
-
-                                <img
-                                    className={`${item.value == "stripe" ? "w-14" : ""} object-cover`}
-                                    src={item.image}
-                                    alt={item.label}
-                                />
-                            </div>} />)}
-
-
-                        </RadioGroup>
-
-                    </section>
-                    <section className='border rounded-md'>
-                        <PricingCard />
-                        <div className='p-5'>
-                            <Button
-                                onClick={handleCreateOrder} sx={{ py: "11px" }}
-                                variant='contained' fullWidth>Checkout</Button>
-                        </div>
-                    </section>
-
-                </div>
-
+            {/* Step indicator */}
+            <div className='flex items-center gap-2 text-sm text-gray-500 mb-5'>
+                <span className='text-[#007185] font-semibold'>Cart</span>
+                <span>›</span>
+                <span className='font-bold text-gray-900'>Delivery Address</span>
+                <span>›</span>
+                <span>Payment</span>
             </div>
 
-            <Modal
-                open={open}
-                onClose={handleClose}
-                aria-labelledby="modal-modal-title"
-                aria-describedby="modal-modal-description"
-            >
+            <div className='grid grid-cols-1 lg:grid-cols-3 gap-5 items-start'>
+
+                {/* ── Left: Address selection ── */}
+                <div className='lg:col-span-2 space-y-4'>
+
+                    <div className='bg-white rounded-md border border-gray-200 overflow-hidden'>
+
+                        {/* Section header */}
+                        <div className='flex items-center justify-between px-5 py-3 border-b border-gray-100 bg-[#F0F2F2]'>
+                            <div className='flex items-center gap-2'>
+                                <LocationOnOutlinedIcon sx={{ fontSize: 18, color: '#007185' }} />
+                                <span className='font-bold text-sm text-gray-900'>Choose a Delivery Address</span>
+                            </div>
+                            <button
+                                onClick={handleOpen}
+                                className='text-xs font-semibold text-[#007185] hover:underline flex items-center gap-1'
+                            >
+                                <AddIcon sx={{ fontSize: 15 }} />
+                                Add new address
+                            </button>
+                        </div>
+
+                        {/* Address list */}
+                        {addresses.length > 0 ? (
+                            <div className='divide-y divide-gray-100'>
+                                {addresses.map((item, index) => (
+                                    <AddressCard
+                                        key={item.id}
+                                        item={item}
+                                        selectedValue={selectedIndex}
+                                        value={index}
+                                        handleChange={handleChange}
+                                    />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className='flex flex-col items-center justify-center py-12 text-center px-6'>
+                                <LocationOnOutlinedIcon sx={{ fontSize: 48, color: '#ccc', mb: 1 }} />
+                                <p className='text-gray-600 font-medium'>No saved addresses</p>
+                                <p className='text-sm text-gray-400 mt-1'>Add a delivery address to continue</p>
+                            </div>
+                        )}
+
+                        {/* Add address row */}
+                        <div className='border-t border-gray-100 px-5 py-3'>
+                            <button
+                                onClick={handleOpen}
+                                className='flex items-center gap-2 text-sm text-[#007185] hover:underline font-semibold'
+                            >
+                                <AddIcon sx={{ fontSize: 17 }} />
+                                Add a new delivery address
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* ── Right: Payment + Summary ── */}
+                <div className='col-span-1 space-y-4'>
+
+                    {/* Payment Gateway */}
+                    <div className='bg-white rounded-md border border-gray-200 overflow-hidden'>
+                        <div className='px-5 py-3 border-b border-gray-100 bg-[#F0F2F2]'>
+                            <span className='text-sm font-bold text-gray-900'>Choose Payment Method</span>
+                        </div>
+                        <div className='px-5 py-4'>
+                            <RadioGroup
+                                value={paymentGateway}
+                                onChange={handlePaymentChange}
+                                className='flex flex-col gap-3'
+                            >
+                                {paymentGatwayList.map((item) => (
+                                    <label
+                                        key={item.value}
+                                        className={`flex items-center gap-3 border rounded-md px-4 py-3 cursor-pointer transition-all ${
+                                            paymentGateway === item.value
+                                                ? 'border-[#F6A429] bg-[#fffdf0] shadow-sm'
+                                                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        <Radio
+                                            value={item.value}
+                                            size='small'
+                                            sx={{
+                                                color: '#007185',
+                                                '&.Mui-checked': { color: '#007185' },
+                                                padding: 0,
+                                            }}
+                                        />
+                                        <img
+                                            src={item.image}
+                                            alt={item.label}
+                                            className='h-6 object-contain'
+                                        />
+                                        <span className='text-sm font-medium text-gray-700'>{item.label}</span>
+                                    </label>
+                                ))}
+                            </RadioGroup>
+                        </div>
+                    </div>
+
+                    {/* Order Summary + Checkout */}
+                    <div className='bg-white rounded-md border border-gray-200 overflow-hidden'>
+                        <div className='px-5 py-2 flex items-center gap-1.5 text-xs text-[#007600] border-b border-gray-100'>
+                            <LockIcon sx={{ fontSize: 13 }} />
+                            <span>Secure transaction</span>
+                        </div>
+                        <PricingCard />
+                        <div className='px-5 pb-5 pt-2'>
+                            <button
+                                onClick={handleCreateOrder}
+                                disabled={addresses.length === 0 || orderLoading}
+                                className='w-full py-2.5 rounded-full font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2'
+                                style={{
+                                    background: 'linear-gradient(to bottom, #FFD814, #F8B200)',
+                                    border: '1px solid #C7980A',
+                                    color: '#111',
+                                }}
+                            >
+                                {orderLoading ? (
+                                    <>
+                                        <svg className='animate-spin' width='16' height='16' viewBox='0 0 24 24' fill='none'>
+                                            <circle cx='12' cy='12' r='10' stroke='rgba(0,0,0,0.2)' strokeWidth='3' />
+                                            <path d='M12 2a10 10 0 0 1 10 10' stroke='#111' strokeWidth='3' strokeLinecap='round' />
+                                        </svg>
+                                        Processing...
+                                    </>
+                                ) : 'Place Order'}
+                            </button>
+                            <p className='text-center text-xs text-gray-400 mt-2'>
+                                By placing your order, you agree to our terms & conditions.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <Modal open={open} onClose={handleClose}>
                 <Box sx={style}>
-                    <AddressForm paymentGateway={paymentGateway} handleClose={handleClose} />
+                    <AddressForm paymentGateway={paymentGateway} handleClose={handleClose} onAddressSaved={handleAddressSaved} />
                 </Box>
             </Modal>
         </div>
-    )
-}
+    );
+};
 
-export default AddressPage
+export default AddressPage;
