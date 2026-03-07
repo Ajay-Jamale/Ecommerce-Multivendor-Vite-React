@@ -15,7 +15,7 @@ const initialState: OrderState = {
   loading: false,
   error: null,
   orderCanceled: false,
-  paymentConfirmed: false,   // ← NEW: true only after paymentSuccess API confirms
+  paymentConfirmed: false,
 };
 
 const API_URL = "/api/orders";
@@ -30,7 +30,7 @@ export const fetchUserOrderHistory = createAsyncThunk<Order[], string>(
       });
       return response.data;
     } catch (error: any) {
-      return rejectWithValue(error.response.data.error || "Failed to fetch order history");
+      return rejectWithValue(error.response?.data?.error || "Failed to fetch order history");
     }
   }
 );
@@ -50,7 +50,21 @@ export const fetchOrderById = createAsyncThunk<Order, { orderId: number; jwt: st
   }
 );
 
-// Create a new order — redirects to payment gateway, does NOT place order yet
+// Create a new order and return the payment link.
+// FIX: Removed window.location.href from the thunk.
+// A Redux thunk must NOT perform browser navigation — it's a pure data layer.
+// Reasons this was causing the bug:
+//   1. If payment_link_url was undefined/null in the response, the redirect
+//      never happened but the thunk still returned successfully. The component
+//      had no way to know the redirect failed.
+//   2. The component called dispatch() synchronously (no await), so by the time
+//      the async thunk resolved and tried to redirect, React may have already
+//      re-rendered or unmounted the component.
+//   3. Putting navigation in a thunk makes it impossible to test and impossible
+//      for the component to handle errors gracefully.
+//
+// The component (AddressPage) now awaits the result via .unwrap() and performs
+// the redirect itself — giving full control and error handling to the UI layer.
 export const createOrder = createAsyncThunk<
   any,
   { address: Address; jwt: string; paymentGateway: string }
@@ -60,14 +74,36 @@ export const createOrder = createAsyncThunk<
       headers: { Authorization: `Bearer ${jwt}` },
       params: { paymentMethod: paymentGateway },
     });
-    console.log("order created ", response.data);
-    // Redirect user to payment gateway
-    if (response.data.payment_link_url) {
-      window.location.href = response.data.payment_link_url;
+
+    console.log("createOrder raw response:", response.data);
+
+    // Check for payment_link_url — log full response so we can see
+    // the exact field names the backend returns
+    if (!response.data?.payment_link_url) {
+      console.error(
+        "payment_link_url missing. Backend returned:",
+        JSON.stringify(response.data, null, 2)
+      );
+      return rejectWithValue(
+        "Order created but payment_link_url missing. See console for backend response."
+      );
     }
+
     return response.data;
   } catch (error: any) {
-    return rejectWithValue("Failed to create order");
+    // Log the full error so we can see HTTP status, headers, and body
+    console.error("createOrder error status :", error.response?.status);
+    console.error("createOrder error body   :", error.response?.data);
+    console.error("createOrder error message:", error.message);
+
+    const message =
+      error.response?.data?.message ||
+      error.response?.data?.error  ||
+      error.response?.data         ||
+      error.message                ||
+      "Failed to create order";
+
+    return rejectWithValue(message);
   }
 });
 
@@ -161,11 +197,10 @@ const orderSlice = createSlice({
       .addCase(createOrder.pending, (state) => {
         state.loading = true;
         state.error = null;
-        state.paymentConfirmed = false;   // reset on new order attempt
+        state.paymentConfirmed = false;
       })
       .addCase(createOrder.fulfilled, (state, action: PayloadAction<any>) => {
         state.paymentOrder = action.payload;
-        // NOTE: currentOrder is NOT set here — order is only confirmed after payment
         state.loading = false;
       })
       .addCase(createOrder.rejected, (state, action) => {
@@ -186,7 +221,6 @@ const orderSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // ── Payment success: THIS is when the order is truly placed ──
       .addCase(paymentSuccess.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -194,8 +228,8 @@ const orderSlice = createSlice({
       })
       .addCase(paymentSuccess.fulfilled, (state, action) => {
         state.loading = false;
-        state.paymentConfirmed = true;    // ← triggers success UI + cart clear
-        state.currentOrder = action.payload as any; // store confirmed order
+        state.paymentConfirmed = true;
+        state.currentOrder = action.payload as any;
       })
       .addCase(paymentSuccess.rejected, (state, action) => {
         state.loading = false;
@@ -226,9 +260,9 @@ const orderSlice = createSlice({
 export default orderSlice.reducer;
 export const { resetPaymentConfirmed } = orderSlice.actions;
 
-export const selectOrders = (state: RootState) => state.orders.orders;
-export const selectCurrentOrder = (state: RootState) => state.orders.currentOrder;
-export const selectPaymentOrder = (state: RootState) => state.orders.paymentOrder;
-export const selectOrdersLoading = (state: RootState) => state.orders.loading;
-export const selectOrdersError = (state: RootState) => state.orders.error;
+export const selectOrders          = (state: RootState) => state.orders.orders;
+export const selectCurrentOrder    = (state: RootState) => state.orders.currentOrder;
+export const selectPaymentOrder    = (state: RootState) => state.orders.paymentOrder;
+export const selectOrdersLoading   = (state: RootState) => state.orders.loading;
+export const selectOrdersError     = (state: RootState) => state.orders.error;
 export const selectPaymentConfirmed = (state: RootState) => state.orders.paymentConfirmed;

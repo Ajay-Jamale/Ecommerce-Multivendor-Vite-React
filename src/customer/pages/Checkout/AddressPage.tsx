@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import PricingCard from '../Cart/PricingCard'
-import { Box, Button, FormControlLabel, Modal, Radio, RadioGroup } from '@mui/material'
-import { useNavigate } from 'react-router-dom'
+import { Box, Modal } from '@mui/material'
 import AddressForm from './AddresssForm'
 import AddressCard from './AddressCard'
 import AddIcon from '@mui/icons-material/Add';
@@ -9,6 +8,7 @@ import LockIcon from '@mui/icons-material/Lock';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import { createOrder } from '../../../Redux Toolkit/Customer/OrderSlice'
 import { useAppDispatch, useAppSelector } from '../../../Redux Toolkit/Store'
+import { Radio, RadioGroup } from '@mui/material'
 
 const style = {
     position: 'absolute' as 'absolute',
@@ -32,49 +32,75 @@ const paymentGatwayList = [
 ];
 
 const AddressPage = () => {
-    const navigate = useNavigate();
     const [selectedIndex, setSelectedIndex] = useState(0);
     const dispatch = useAppDispatch();
     const { user } = useAppSelector(store => store);
     const { loading: orderLoading } = useAppSelector(store => store.orders);
     const [paymentGateway, setPaymentGateway] = useState(paymentGatwayList[0].value);
     const [open, setOpen] = useState(false);
-    const [pendingAddress, setPendingAddress] = useState<any>(null);
 
-    const handleOpen = () => setOpen(true);
-    const handleClose = () => {
-        setOpen(false);
-        // If user saved a new address via form, use it immediately
-        if (pendingAddress) {
-            setPendingAddress(null);
-        }
-    };
-
-    const handleAddressSaved = (address: any) => {
-        setPendingAddress(address);
-        // Dispatch createOrder with the freshly entered address directly
-        if (!orderLoading) {
-            dispatch(createOrder({
+    // FIX 1: Extracted a single async dispatchOrder function used by both
+    // handleCreateOrder (existing address) and handleAddressSaved (new address).
+    // Previously both called dispatch() without awaiting — so if the thunk's
+    // window.location.href ran but React re-rendered before navigation completed,
+    // or if payment_link_url was undefined, there was no fallback or error handling.
+    const dispatchOrder = async (address: any) => {
+        try {
+            // FIX 2: .unwrap() re-throws any rejectWithValue error as an exception,
+            // giving us a reliable try/catch. Without .unwrap(), a rejected thunk
+            // looks like a resolved promise and errors are silently swallowed.
+            const result = await dispatch(createOrder({
                 paymentGateway,
                 address,
                 jwt: localStorage.getItem('jwt') || '',
-            }));
+            })).unwrap();
+
+            // FIX 3: The thunk already does window.location.href inside itself,
+            // but we add a safety check here too. If the backend returns the URL
+            // but the thunk's redirect somehow didn't fire (e.g. the thunk was
+            // cancelled or the field name changed), this catches it.
+            if (result?.payment_link_url) {
+                window.location.href = result.payment_link_url;
+            } else {
+                // payment_link_url was missing in the response — log clearly
+                // so it's obvious the backend isn't returning the expected field.
+                console.error(
+                    '[AddressPage] createOrder succeeded but payment_link_url is missing.',
+                    'Full response:', result,
+                    '\nCheck your backend — the order was created but the user',
+                    'cannot be redirected to payment without this field.'
+                );
+                alert('Payment gateway URL not received. Please contact support.');
+            }
+        } catch (error: any) {
+            // error here is the rejectWithValue payload (a string)
+            console.error('[AddressPage] createOrder failed:', error);
+            alert(`Order failed: ${error}`);
         }
+    };
+
+    const handleOpen = () => setOpen(true);
+    const handleClose = () => setOpen(false);
+
+    // Called when user picks an existing saved address and clicks Place Order
+    const handleCreateOrder = () => {
+        if (orderLoading) return;
+        const addresses = user.user?.addresses ?? [];
+        if (addresses.length === 0) return;
+        dispatchOrder(addresses[selectedIndex]);
+    };
+
+    // Called by AddressForm when a new address is submitted
+    // FIX 4: Previously this called dispatch directly without await, AND it
+    // was also calling handleClose() which cleared pendingAddress before
+    // the async order could be placed. Now it awaits inside dispatchOrder.
+    const handleAddressSaved = (address: any) => {
+        setOpen(false);
+        dispatchOrder(address);
     };
 
     const handleChange = (event: any) => {
         setSelectedIndex(Number(event.target.value));
-    };
-
-    const handleCreateOrder = () => {
-        if (orderLoading) return;  // prevent duplicate dispatches
-        if (user.user?.addresses) {
-            dispatch(createOrder({
-                paymentGateway,
-                address: user.user.addresses[selectedIndex],
-                jwt: localStorage.getItem('jwt') || ""
-            }));
-        }
     };
 
     const handlePaymentChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,7 +125,6 @@ const AddressPage = () => {
 
                 {/* ── Left: Address selection ── */}
                 <div className='lg:col-span-2 space-y-4'>
-
                     <div className='bg-white rounded-md border border-gray-200 overflow-hidden'>
 
                         {/* Section header */}
@@ -233,7 +258,11 @@ const AddressPage = () => {
 
             <Modal open={open} onClose={handleClose}>
                 <Box sx={style}>
-                    <AddressForm paymentGateway={paymentGateway} handleClose={handleClose} onAddressSaved={handleAddressSaved} />
+                    <AddressForm
+                        paymentGateway={paymentGateway}
+                        handleClose={handleClose}
+                        onAddressSaved={handleAddressSaved}
+                    />
                 </Box>
             </Modal>
         </div>
